@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/AZY_compiler.dir/src/lexer.cpp.o.d"
   "CMakeFiles/AZY_compiler.dir/src/main.cpp.o"
   "CMakeFiles/AZY_compiler.dir/src/main.cpp.o.d"
+  "CMakeFiles/AZY_compiler.dir/src/parser.cpp.o"
+  "CMakeFiles/AZY_compiler.dir/src/parser.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

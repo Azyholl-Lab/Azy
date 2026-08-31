@@ -9,7 +9,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/Application")
 
 add_executable(AZY_compiler
     src/main.cpp
+
+    src/Token.h
+
     src/lexer.cpp
     src/lexer.h
-    src/Token.h
+
+    src/parser.cpp
+    src/parser.h
+
+    
 )

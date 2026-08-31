@@ -1,6 +1,8 @@
 #include <iostream>
+#include <vector>
 #include "Token.h"
 #include "lexer.h"
+#include "parser.h"
 
 std::string tokenTypeToString(TokenType type) {
     switch (type) {
@@ -30,6 +32,14 @@ int main(int argc, char *argv[]) {
     FILE *input = stdin; 
 
     if (argc > 1) {
+        std::string filename = argv[1];
+        
+        // Проверка расширения .azy (требует C++17 или строкового метода)
+        if (filename.length() < 4 || filename.compare(filename.length() - 4, 4, ".azy") != 0) {
+            std::cerr << "[Ошибка] Поддерживаются только файлы с расширением .azy\n";
+            return 1;
+        }
+
         input = fopen(argv[1], "r");
         if (!input) {
             perror("Ошибка открытия файла");
@@ -38,6 +48,7 @@ int main(int argc, char *argv[]) {
     }
 
     std::cout << "Главный файл запущен. Читаем токены...\n";
+    std::vector<Token> tokens;
 
     while (true) {
         if (feof(input)) break;
@@ -49,10 +60,25 @@ int main(int argc, char *argv[]) {
         }
 
         processToken(tok);
+
+        if (tok.type != TokenType::Unknown) {
+            tokens.push_back(tok);
+        }
+
     }
 
     if (input != stdin) {
         fclose(input);
     }
+
+    std::cout << "Лексер закончил свою работу" << "\n";
+    std::cout << "Всего сохранено токенов в массив: " << tokens.size() << "\n \n \n" ;
+    std::cout << "Запущен парсер..." << "\n";
+
+    Parser parser(tokens);
+    parser.parse();
+
+    std::cout << "Парсер закончил свою работу" << "\n";
+
     return 0;
 }

@@ -10,6 +10,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/azyholl/Документы/GitHub/Azy/src/lexer.cpp" "CMakeFiles/AZY_compiler.dir/src/lexer.cpp.o" "gcc" "CMakeFiles/AZY_compiler.dir/src/lexer.cpp.o.d"
   "/home/azyholl/Документы/GitHub/Azy/src/main.cpp" "CMakeFiles/AZY_compiler.dir/src/main.cpp.o" "gcc" "CMakeFiles/AZY_compiler.dir/src/main.cpp.o.d"
+  "/home/azyholl/Документы/GitHub/Azy/src/parser.cpp" "CMakeFiles/AZY_compiler.dir/src/parser.cpp.o" "gcc" "CMakeFiles/AZY_compiler.dir/src/parser.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.
