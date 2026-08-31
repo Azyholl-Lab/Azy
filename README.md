@@ -1,48 +1,69 @@
-# Azy
-The official implementation of Azy — a long-term programming language project. Part of the Azyholl-Labs ecosystem. Contributions, forks, and feedback are welcome!
+# Azy Programming Language
 
-## Project Structure
+**Azy** — это разрабатываемый компилируемый язык программирования общего назначения, создаваемый с нуля на C++.
+
+---
+
+## 📌 Текущий прогресс разработки
+
+На данный момент полностью разработан и отлажен **лексический анализатор (лексер)**. Он читает исходный код построчно, преобразует его в последовательность токенов, отслеживает позицию каждого элемента (строку и колонку) и обрабатывает различные типы данных и операторов.
+
+### Возможности текущего лексера:
+
+* **Типизация токенов (`TokenType`):** поддержка идентификаторов (`Identifier`), целых чисел (`Int`), чисел с плавающей точкой (`Float`), строк (`String`), операторов (`Operator`) и неизвестных символов (`Unknown`).
+* **Продвинутая обработка чисел:** корректный разбор целых чисел, классических чисел с плавающей точкой (например, `3.14`), чисел, начинающихся с точки (например, `.5`), а также безопасное распознавание одиночной точки как оператора доступа.
+* **Строковые литералы:** выделение текста внутри кавычек (`"..."`).
+* **Комментарии:** автоматический пропуск однострочных комментариев, начинающихся с символа `#`.
+* **Составные операторы:** распознавание сложных логических и операторов сравнения (`==`, `!=`, `<=`, `>=`, `&&`, `||`).
+* **Трекинг позиций:** точное определение номера строки и колонки для каждого токена с выводом подробной информации при анализе.
+
+---
+
+## 📂 Структура проекта
+
+```text
+AZY/
+├── Application/         # Собранные бинарники и тестовые скрипты
+│   ├── AZY_compiler
+│   └── test.azy
+├── src/                 # Исходный код компилятора
+│   ├── lexer.cpp        # Реализация лексического анализатора
+│   ├── lexer.h          # Интерфейс лексера
+│   ├── Token.h          # Определение структуры Token и перечисления TokenType
+│   └── main.cpp         # Точка входа (потоковый вывод токенов в консоль)
+├── trash/               # Архивные и черновые наработки
+└── CMakeLists.txt       # Конфигурация сборки CMake
 
 ```
-Azy/
-├── CMakeLists.txt          # Build configuration (CMake)
-├── LICENSE                 # License information
-├── README.md               # Project documentation
-├── .gitignore              # Git ignore rules
-├── include/                # Public header files
-│   ├── lexer.hpp           # Lexer interface (tokenization)
-│   └── parser.hpp          # Parser interface (AST building)
-└── src/                    # Source code
-    ├── main.cpp            # Entry point — reads source file and runs the pipeline
-    ├── lexer.cpp           # Lexer implementation
-    └── parser.cpp          # Parser implementation
+
+---
+
+## 🛠 Сборка и запуск проекта
+
+Для сборки проекта требуются компилятор с поддержкой **C++17** и система сборки **CMake** (версии 3.10 и выше).
+
+### Клонирование и компиляция:
+
+```bash
+# Клонирование репозитория
+git clone https://github.com/Azyholl-Lab/Azy.git
+cd Azy
+
+# Создание директории сборки
+mkdir build
+cd build
+
+# Генерация файлов сборки и компиляция
+cmake ..
+cmake --build .
+
 ```
 
-### Components
+### Запуск анализатора:
 
-- **`src/main.cpp`** — Entry point. Reads a source file (`.ml`) from the command line and prepares the pipeline (lexer → parser → interpreter).
-- **`src/lexer.cpp` / `include/lexer.hpp`** — Lexer: converts raw source code into a stream of tokens.
-- **`src/parser.cpp` / `include/parser.hpp`** — Parser: builds an abstract syntax tree (AST) from tokens.
-- **`CMakeLists.txt`** — Build configuration for CMake-based compilation.
+После успешной сборки исполняемый файл можно запустить, передав ему файл с исходным кодом на языке Azy:
 
-## Development Status
+```bash
+./lexer ../Application/test.azy
 
-**Overall project completion: 0.5%**
-
-| File | Status | Progress |
-|------|--------|----------|
-| `src/main.cpp` | CLI scaffold — reads and prints source file | 60% |
-| `CMakeLists.txt` | Build configuration placeholder | 10% |
-| `include/lexer.hpp` | Interface stub | 0% |
-| `src/lexer.cpp` | Implementation stub | 0% |
-| `include/parser.hpp` | Interface stub | 0% |
-| `src/parser.cpp` | Implementation stub | 0% |
-| `.gitignore` | Placeholder | 0% |
-
-### Roadmap
-
-- [x] Project scaffold & CLI entry point (`main.cpp`)
-- [ ] Lexer: tokenization of `.ml` source code
-- [ ] Parser: abstract syntax tree (AST) building
-- [ ] Interpreter / compiler backend
-- [ ] Standard library & Azyholl-Labs ecosystem integration
+```
