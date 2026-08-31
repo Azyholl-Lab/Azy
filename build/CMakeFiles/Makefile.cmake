@@ -44,5 +44,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/lexer.dir/DependInfo.cmake"
+  "CMakeFiles/AZY_compiler.dir/DependInfo.cmake"
   )

@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
-project(AzyLexer)
+project(Azy)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(lexer
+# Установка папки для сохранения исполняемого файла
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/Application")
+
+add_executable(AZY_compiler
     src/main.cpp
     src/lexer.cpp
     src/lexer.h
+    src/Token.h
 )

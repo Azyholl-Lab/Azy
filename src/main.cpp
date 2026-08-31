@@ -1,10 +1,29 @@
 #include <iostream>
+#include "Token.h"
 #include "lexer.h"
 
-// Пример функции, куда мы передаем токен дальше (например, парсер)
+std::string tokenTypeToString(TokenType type) {
+    switch (type) {
+        case TokenType::Identifier: return "Identifier";
+        case TokenType::Int:        return "Int";
+        case TokenType::Float:      return "Float";
+        case TokenType::Operator:   return "Operator";
+        case TokenType::String:     return "String";
+        case TokenType::Unknown:    return "Unknown";
+    }
+    return "Unknown";
+}
+
 void processToken(const Token& tok) {
-    // Здесь ваша логика обработки токена (синтаксический анализ и т.д.)
-    std::cout << "[Парсер получил] Токен со значением: " << tok.value << "\n";
+    if(tok.type != TokenType::Unknown){
+    std::cout << "[Парсер получил] Тип: " << tokenTypeToString(tok.type)
+              << ", Значение: \"" << tok.value 
+              << "\", Строка: " << tok.line 
+              << ", Символ: " << tok.column << "\n";
+}
+    else {
+        std::cout << ", Значение: \"" << tok.value << "\" Ошибка в строке: "  << tok.line  << ", символ: " << tok.column << "\n";
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -20,18 +39,15 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Главный файл запущен. Читаем токены...\n";
 
-    // Главный цикл сбора токенов
     while (true) {
         if (feof(input)) break;
 
         Token tok = gettok(input);
         
-        // Если дошли до конца или пустой токен — прерываемся
         if (tok.value.empty() && tok.type == TokenType::Unknown) {
             break;
         }
 
-        // ПЕРЕДАЕМ ТОКЕН ДАЛЬШЕ
         processToken(tok);
     }
 

@@ -1,10 +1,10 @@
 file(REMOVE_RECURSE
+  "/home/azyholl/Документы/GitHub/Azy/Application/lexer"
+  "/home/azyholl/Документы/GitHub/Azy/Application/lexer.pdb"
   "CMakeFiles/lexer.dir/src/lexer.cpp.o"
   "CMakeFiles/lexer.dir/src/lexer.cpp.o.d"
   "CMakeFiles/lexer.dir/src/main.cpp.o"
   "CMakeFiles/lexer.dir/src/main.cpp.o.d"
-  "lexer"
-  "lexer.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named lexer
+# Target rules for targets named AZY_compiler
 
 # Build rule for target.
-lexer: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lexer
-.PHONY : lexer
+AZY_compiler: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 AZY_compiler
+.PHONY : AZY_compiler
 
 # fast build rule for target.
-lexer/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer.dir/build.make CMakeFiles/lexer.dir/build
-.PHONY : lexer/fast
+AZY_compiler/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/AZY_compiler.dir/build.make CMakeFiles/AZY_compiler.dir/build
+.PHONY : AZY_compiler/fast
 
 src/lexer.o: src/lexer.cpp.o
 .PHONY : src/lexer.o
 
 # target to build an object file
 src/lexer.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer.dir/build.make CMakeFiles/lexer.dir/src/lexer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/AZY_compiler.dir/build.make CMakeFiles/AZY_compiler.dir/src/lexer.cpp.o
 .PHONY : src/lexer.cpp.o
 
 src/lexer.i: src/lexer.cpp.i
@@ -142,7 +142,7 @@ src/lexer.i: src/lexer.cpp.i
 
 # target to preprocess a source file
 src/lexer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer.dir/build.make CMakeFiles/lexer.dir/src/lexer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/AZY_compiler.dir/build.make CMakeFiles/AZY_compiler.dir/src/lexer.cpp.i
 .PHONY : src/lexer.cpp.i
 
 src/lexer.s: src/lexer.cpp.s
@@ -150,7 +150,7 @@ src/lexer.s: src/lexer.cpp.s
 
 # target to generate assembly for a file
 src/lexer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer.dir/build.make CMakeFiles/lexer.dir/src/lexer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/AZY_compiler.dir/build.make CMakeFiles/AZY_compiler.dir/src/lexer.cpp.s
 .PHONY : src/lexer.cpp.s
 
 src/main.o: src/main.cpp.o
@@ -158,7 +158,7 @@ src/main.o: src/main.cpp.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer.dir/build.make CMakeFiles/lexer.dir/src/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/AZY_compiler.dir/build.make CMakeFiles/AZY_compiler.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -166,7 +166,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer.dir/build.make CMakeFiles/lexer.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/AZY_compiler.dir/build.make CMakeFiles/AZY_compiler.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -174,7 +174,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer.dir/build.make CMakeFiles/lexer.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/AZY_compiler.dir/build.make CMakeFiles/AZY_compiler.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -185,7 +185,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... lexer"
+	@echo "... AZY_compiler"
 	@echo "... src/lexer.o"
 	@echo "... src/lexer.i"
 	@echo "... src/lexer.s"

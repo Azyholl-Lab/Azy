@@ -27,7 +27,7 @@
 					[
 						0
 					],
-					"name" : "AzyLexer",
+					"name" : "Azy",
 					"targetIndexes" : 
 					[
 						0
@@ -38,9 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "lexer::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-lexer-Debug-66094190173c4f0401f5.json",
-					"name" : "lexer",
+					"id" : "AZY_compiler::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-AZY_compiler-Debug-b2c9b1973429fe84279a.json",
+					"name" : "AZY_compiler",
 					"projectIndex" : 0
 				}
 			]

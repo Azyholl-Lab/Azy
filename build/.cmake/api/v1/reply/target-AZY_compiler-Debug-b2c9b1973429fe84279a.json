@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "lexer"
+			"path" : "/home/azyholl/\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b/GitHub/Azy/Application/AZY_compiler"
 		}
 	],
 	"backtrace" : 1,
@@ -24,7 +24,7 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 7,
+				"line" : 10,
 				"parent" : 0
 			}
 		]
@@ -54,7 +54,7 @@
 			]
 		}
 	],
-	"id" : "lexer::@6890427a1f51a3e7e1df",
+	"id" : "AZY_compiler::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -70,8 +70,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "lexer",
-	"nameOnDisk" : "lexer",
+	"name" : "AZY_compiler",
+	"nameOnDisk" : "AZY_compiler",
 	"paths" : 
 	{
 		"build" : ".",
@@ -91,7 +91,8 @@
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				2
+				2,
+				3
 			]
 		}
 	],
@@ -112,6 +113,11 @@
 		{
 			"backtrace" : 1,
 			"path" : "src/lexer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "src/Token.h",
 			"sourceGroupIndex" : 1
 		}
 	],

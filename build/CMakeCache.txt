@@ -23,6 +23,15 @@ AzyLexer_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 AzyLexer_SOURCE_DIR:STATIC=/home/azyholl/Документы/GitHub/Azy
 
+//Value Computed by CMake
+Azy_BINARY_DIR:STATIC=/home/azyholl/Документы/GitHub/Azy/build
+
+//Value Computed by CMake
+Azy_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+Azy_SOURCE_DIR:STATIC=/home/azyholl/Документы/GitHub/Azy
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 
@@ -156,7 +165,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=AzyLexer
+CMAKE_PROJECT_NAME:STATIC=Azy
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib

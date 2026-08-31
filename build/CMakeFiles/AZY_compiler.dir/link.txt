@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/AZY_compiler.dir/src/main.cpp.o CMakeFiles/AZY_compiler.dir/src/lexer.cpp.o -o /home/azyholl/Документы/GitHub/Azy/Application/AZY_compiler 

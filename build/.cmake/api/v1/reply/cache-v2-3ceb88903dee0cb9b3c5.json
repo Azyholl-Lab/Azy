@@ -38,6 +38,42 @@
 			"value" : "/home/azyholl/\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b/GitHub/Azy"
 		},
 		{
+			"name" : "Azy_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/azyholl/\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b/GitHub/Azy/build"
+		},
+		{
+			"name" : "Azy_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "ON"
+		},
+		{
+			"name" : "Azy_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/azyholl/\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b/GitHub/Azy"
+		},
+		{
 			"name" : "CMAKE_ADDR2LINE",
 			"properties" : 
 			[
@@ -883,7 +919,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "AzyLexer"
+			"value" : "Azy"
 		},
 		{
 			"name" : "CMAKE_RANLIB",

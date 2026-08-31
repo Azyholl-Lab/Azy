@@ -1,1 +1,1 @@
-/usr/bin/c++ -g CMakeFiles/lexer.dir/src/main.cpp.o CMakeFiles/lexer.dir/src/lexer.cpp.o -o lexer 
+/usr/bin/c++ -g CMakeFiles/lexer.dir/src/main.cpp.o CMakeFiles/lexer.dir/src/lexer.cpp.o -o /home/azyholl/Документы/GitHub/Azy/Application/lexer 
