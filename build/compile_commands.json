@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/azyholl/Документы/GitHub/Azy/build",
+  "command": "/usr/bin/c++   -g -std=gnu++17 -o CMakeFiles/lexer.dir/src/main.cpp.o -c /home/azyholl/Документы/GitHub/Azy/src/main.cpp",
+  "file": "/home/azyholl/Документы/GitHub/Azy/src/main.cpp",
+  "output": "CMakeFiles/lexer.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/azyholl/Документы/GitHub/Azy/build",
+  "command": "/usr/bin/c++   -g -std=gnu++17 -o CMakeFiles/lexer.dir/src/lexer.cpp.o -c /home/azyholl/Документы/GitHub/Azy/src/lexer.cpp",
+  "file": "/home/azyholl/Документы/GitHub/Azy/src/lexer.cpp",
+  "output": "CMakeFiles/lexer.dir/src/lexer.cpp.o"
+}
+]

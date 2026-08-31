@@ -1,0 +1,3 @@
+/home/azyholl/Документы/GitHub/Azy/build/CMakeFiles/lexer.dir
+/home/azyholl/Документы/GitHub/Azy/build/CMakeFiles/edit_cache.dir
+/home/azyholl/Документы/GitHub/Azy/build/CMakeFiles/rebuild_cache.dir
