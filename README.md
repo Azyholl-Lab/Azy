@@ -65,6 +65,7 @@ cmake --build .
 
 1. **Интерактивный ввод из консоли** (для проверки кода «на лету»):
 ```bash
+cd ../Application/
 ./AZY_compiler
 
 ```
@@ -73,6 +74,7 @@ cmake --build .
 
 2. **Анализ файла с исходным кодом**:
 ```bash
-./AZY_compiler ../Application/test.azy
+cd ../Application/
+./AZY_compiler test.azy
 
 ```
