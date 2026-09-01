@@ -1,6 +1,11 @@
 #pragma once
 #include <vector>
+#include <string>
+#include <sstream> 
+#include <stdexcept>   
+#include <utility>     
 #include "Token.h"
+#include <iostream>
 
 class Parser {
 private:
@@ -14,17 +19,36 @@ private:
     bool check(TokenType type, const std::string& value);               // Проверить текущий токен
     bool checkNext(TokenType type, const std::string& value);           // Проверить следующий токен
 
+    void debugging() {
+        Token token = peek();
+        std::cout << "[Парсер] " << token.value << "\n";
+    }
+
 public:
     Parser(const std::vector<Token>& toks);
     void parse();         // Главный метод запуска
 
-    void parserError(const Token& token, const std::string& message);
+    template <typename... Args>
+    void parserError(const Token& token, Args&&... args) {
+        std::ostringstream msgStream;
+        (msgStream << ... << std::forward<Args>(args));
+
+        std::string errorMsg = "[Ошибка парсера] " + msgStream.str() + 
+            " (строка: " + std::to_string(token.line) + 
+            ", символ: " + std::to_string(token.column) + 
+            ", токен: '" + token.value + "')";
+            
+        throw std::runtime_error(errorMsg);
+    }
 
     // Функции-обработчики для разных конструкций (ветвления)
     void parseStatement();      // точка входа
     
-    void parseIf();
+    void parseIF();
     void parseElse();
+
+    void parseWhile();
+    void parseDo_While();
     
    void parseAssignment();      // Оператор присваивания
 

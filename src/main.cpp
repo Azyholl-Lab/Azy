@@ -4,21 +4,9 @@
 #include "lexer.h"
 #include "parser.h"
 
-std::string tokenTypeToString(TokenType type) {
-    switch (type) {
-        case TokenType::Identifier: return "Identifier";
-        case TokenType::Int:        return "Int";
-        case TokenType::Float:      return "Float";
-        case TokenType::Operator:   return "Operator";
-        case TokenType::String:     return "String";
-        case TokenType::Unknown:    return "Unknown";
-    }
-    return "Unknown";
-}
-
 void processToken(const Token& tok) {
     if(tok.type != TokenType::Unknown){
-    std::cout << "[Парсер получил] Тип: " << tokenTypeToString(tok.type)
+    std::cout << "[Парсер получил] Тип: " << tok.type
               << ", Значение: \"" << tok.value 
               << "\", Строка: " << tok.line 
               << ", Символ: " << tok.column << "\n";

@@ -1,6 +1,5 @@
 #include "parser.h"
-#include <iostream>
-#include <stdexcept>
+
 
 Parser::Parser(const std::vector<Token>& toks) : tokens(toks), currentPos(0) {}
 
@@ -43,33 +42,27 @@ void Parser::parse() {
     }
 }
 
-void Parser::parserError(const Token& token, const std::string& message) {
-    std::string errorMsg = "[Ошибка парсера] " + message + " (строка: " + std::to_string(token.line) + ", символ: " + std::to_string(token.column) + ", токен: '" + token.value + "')";
-    throw std::runtime_error(errorMsg);
-}
-
 // ==========================================
 // ГЛАВНОЕ ВЕТВЛЕНИЕ
 // ==========================================
 void Parser::parseStatement() {
-    if (check(TokenType::Identifier, "if")) {
-        parseIf();
-    } 
-
-
-    else if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
+    if (check(TokenType::Identifier, "if")){
+        parseIF();
+    } else if (check(TokenType::Identifier, "do") ){
+        parseDo_While();
+    }else if (check(TokenType::Identifier, "while")){
+        parseWhile();
+    } else if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
         parseAssignment();
-    }
-    // По умолчанию: скип
-    else {
+    } else {
         // parseExpression();
         consume(); //временное решение для нереализованных токенов
     }
 }
 
 void Parser::parseBlock() {
+    debugging();
     consume(); // Съедаем '{'
-    std::cout << "[Парсер] {\n";
 
     while (peek().value != "}" && peek().type != TokenType::Unknown) {
         parseStatement();
@@ -78,42 +71,82 @@ void Parser::parseBlock() {
     if (peek().value != "}") {
          parserError(peek(), "Ожидалась закрывающая фигурная скобка '}'");
     }
+    debugging();
     consume(); // Съедаем '}'
-    std::cout << "[Парсер] }\n";
 }
 
 
 //Реализация конкретных функций
 
-void Parser::parseAssignment() {
-    Token varName = consume(); // Забираем имя переменной (идентификатор)
-    Token op = consume();      // Забираем знак '='
-    parseLogicalOr(); 
-    std::cout << "[Парсер] Присваивание переменной: " << varName.value << "\n";
+void Parser::parseDo_While(){
+    debugging();
+    Token token = peek();
+    consume();
+    if (peek().value == "{"){
+        parseBlock();
+    } else {
+        parserError(peek(), "Ожидался блок кода '{...}' после идентификатора", token.value);
+    }
+
+    if (check(TokenType::Identifier, "while")){
+        token = peek();
+        consume();
+         if (peek().value != "(") {
+            parserError(peek(), "Ожидалась открывающая скобка '(' после ", token.value);
+        }
+        consume();
+        parseLogicalOr(); 
+
+        if (peek().value != ")") {
+            parserError(peek(), "Ожидалась закрывающая скобка ')' после условия ", token.value);
+        }
+        consume();
+    } else {
+        parserError(peek(), "Ожидался идентификатор while после блока кода ", token.value);
+    }
+
 }
 
-
-// if(true){ parseStatement }
-void Parser::parseIf() {
+void Parser::parseWhile(){
+    Token token = peek();
     consume();
-    std::cout << "[Парсер] Ветка IF\n";
-
-    // 1. Проверяем и съедаем открывающую скобку условия
     if (peek().value != "(") {
-         parserError(peek(), "Ожидалась открывающая скобка '(' после 'if'");
+         parserError(peek(), "Ожидалась открывающая скобка '(' после ", token.value);
     }
     consume();
     parseLogicalOr(); 
 
     if (peek().value != ")") {
-        parserError(peek(), "Ожидалась закрывающая скобка ')' после условия if");
+        parserError(peek(), "Ожидалась закрывающая скобка ')' после условия ", token.value);
+    }
+    consume();
+    if (peek().value == "{"){
+        parseBlock();
+    } else {
+        parserError(peek(), "Ожидался блок кода '{...}' после условия ", token.value);
+    }
+}
+
+void Parser::parseIF() {
+    Token token = peek();
+    debugging();
+    consume();
+
+    if (peek().value != "(") {
+         parserError(peek(), "Ожидалась открывающая скобка '(' после ", token.value);
+    }
+    consume();
+    parseLogicalOr(); 
+
+    if (peek().value != ")") {
+        parserError(peek(), "Ожидалась закрывающая скобка ')' после условия ", token.value);
     }
     consume();
 
     if (peek().value == "{"){
         parseBlock();
     } else {
-        parserError(peek(), "Ожидался блок кода '{...}' после условия if");
+        parserError(peek(), "Ожидался блок кода '{...}' после условия ", token.value);
     }
 
     if (check(TokenType::Identifier, "else")) {
@@ -122,10 +155,10 @@ void Parser::parseIf() {
 }
 
 void Parser::parseElse(){
+    debugging();
     consume();
-    std::cout << "[Парсер] Ветка ELSE\n";
     if (check(TokenType::Identifier, "if")) {
-        parseIf();
+        parseIF();
     } else if (peek().value == "{"){
         parseBlock();
     } else {
@@ -133,8 +166,12 @@ void Parser::parseElse(){
     }
 }
 
-
-
+void Parser::parseAssignment() {
+    Token varName = consume(); // Забираем имя переменной (идентификатор)
+    Token op = consume();      // Забираем знак '='
+    parseLogicalOr(); 
+    std::cout << "[Парсер] Присваивание переменной: " << varName.value << "\n";
+}
 
 //Вспомогательный блок условий кода
 //Проверяет на выполнение условий
