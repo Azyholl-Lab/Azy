@@ -1,3 +1,0 @@
-/home/azyholl/Документы/GitHub/Azy/build/CMakeFiles/AZY_compiler.dir
-/home/azyholl/Документы/GitHub/Azy/build/CMakeFiles/edit_cache.dir
-/home/azyholl/Документы/GitHub/Azy/build/CMakeFiles/rebuild_cache.dir
