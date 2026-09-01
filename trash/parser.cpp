@@ -179,7 +179,7 @@ void Parser::parsePrint() {
     std::cout << "[Парсер] Обнаружен оператор печати\n";
 
     // Проверяем опциональный модификатор .ln (например, print.ln)
-    if (check(TokenType::Operator, ".") || (peek().type == TokenType::Identifier && peek().value == ".")) {
+    if (check(TokenType::Operator, ".")) {
         consume(); // Съедаем точку
         
         if (check(TokenType::Identifier, "ln")) {
