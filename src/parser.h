@@ -20,6 +20,7 @@ public:
     void parseStatement();      // точка входа
     void parseBlock();          // тело блока
     
+    void parseFunc();           // блок пользовательской функции
     void parseIf();             // блок if
     void parseElse();           // блок else
     void parseExpression();     // разобрать выражение
@@ -29,6 +30,9 @@ public:
     
     
     void parseFactor();
+
+    void parsePrint();
+
 
     void parserError(const Token& token, const std::string& message);
 };

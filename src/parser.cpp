@@ -43,28 +43,31 @@ void Parser::parseStatement() {
     Token tok = peek();
 
     // 1. Ветвление для условного оператора: if
+    // if (tok.type == TokenType::Identifier && tok.value == "func") {
+    //     parseFunc();
+    // }
+    // else 
     if (tok.type == TokenType::Identifier && tok.value == "if") {
         parseIf();
     }
-    else if (tok.value == "{") {
+    else if (tok.type == TokenType::Operator && tok.value == "{") {
         parseBlock();
     }
-    // // 2. Ветвление для цикла while
-    // else if (tok.type == TokenType::Identifier && tok.value == "while") {
-    //     parseWhile();
-    // }
-    // // 3. Ветвление для цикла for
-    // else if (tok.type == TokenType::Identifier && tok.value == "for") {
-    //     parseFor();
-    // }
-    // // 4. Ветвление для объявления функции: func
-    // else if (tok.type == TokenType::Identifier && tok.value == "func") {
-    //     parseFunc();
-    // }
-    // 5. По умолчанию: математические действия, присваивания или вызовы (начинающиеся с переменной или числа)
-    // else {
-    //     parseExpression();
-    // }
+    else if (tok.type == TokenType::Identifier && tok.value == "print") {
+        parsePrint();
+    }
+    // else if (tok.type == TokenType::Identifier && tok.value == "print") {
+
+    // 5. По умолчанию: скип
+    else {
+        // parseExpression();
+        consume(); //временное решение для нереализованных токенов
+    }
+}
+
+void Parser::parseFunc(){
+    consume();
+    // Дописать функции
 }
 
 // --- Реализация конкретных разборщиков ---
@@ -148,14 +151,18 @@ void Parser::parseExpression() {
 }
 
 void Parser::parseFactor() {
-    Token tok = peek();
+    if (peek().value == "!" || peek().value == "not") {
+        consume();
+        parseFactor();
+    }
 
-    if (tok.type == TokenType::Int || tok.type == TokenType::Float || tok.type == TokenType::Identifier) {
-        consume(); // Забираем число, переменную или ключевое слово (true/false)
+    if (peek().type == TokenType::Int || peek().type == TokenType::Float || 
+        peek().type == TokenType::Identifier || peek().type == TokenType::String) {
+        consume(); 
     } 
-    else if (tok.value == "(") {
+    else if (peek().value == "(") {
         consume(); // Съедаем открывающую скобку
-        parseExpression(); // Важно: внутри скобок разбираем выражение, а не statement
+        parseExpression(); 
         
         Token closing = consume();
         if (closing.value != ")") {
@@ -163,8 +170,40 @@ void Parser::parseFactor() {
         }
     } 
     else {
-         parserError(peek(), "Синтаксическая ошибка: неожиданный токен '" + tok.value + "'");
+         parserError(peek(), "Синтаксическая ошибка: неожиданный токен '" + peek().value + "'");
     }
 }
 
 
+
+void Parser::parsePrint() {
+    consume(); // Съедаем ключевое слово "print" (или идентификатор)
+    std::cout << "[Парсер] Обнаружен оператор печати\n";
+
+    // Проверяем опциональный модификатор .ln (например, print.ln)
+    if (check(TokenType::Operator, ".") || (peek().type == TokenType::Identifier && peek().value == ".")) {
+        consume(); // Съедаем точку
+        
+        if (check(TokenType::Identifier, "ln")) {
+            consume(); // Съедаем "ln"
+            std::cout << "[Парсер] Модификатор: перевод строки (ln)\n";
+        } else {
+            parserError(peek(), "Ожидался модификатор 'ln' после точки");
+        }
+    }
+
+    // Проверяем открывающую скобку для аргументов печати
+    if (peek().value != "(") {
+        parserError(peek(), "Ожидалась открывающая скобка '(' после print");
+    }
+    consume(); // Съедаем '('
+
+    // Разбираем выражение, которое нужно вывести
+    parseExpression();
+
+    // Проверяем закрывающую скобку
+    if (peek().value != ")") {
+        parserError(peek(), "Ожидалась закрывающая скобка ')' после аргументов print");
+    }
+    consume(); // Съедаем ')'
+}
