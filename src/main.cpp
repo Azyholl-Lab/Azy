@@ -64,9 +64,11 @@ int main(int argc, char *argv[]) {
     std::cout << "Запущен парсер..." << "\n";
 
     Parser parser(tokens);
-    parser.parse();
+    auto root = parser.parse();        // сохраняем корень дерева
 
-    std::cout << "Парсер закончил свою работу" << "\n";
+    std::cout << "Парсер закончил свою работу" << "\n \n";
+    std::cout << "Готовое дерево AST: " << "\n \n";
+    parser.printAST(root.get());       // вызываем метод печати у объекта parser
 
     return 0;
 }
