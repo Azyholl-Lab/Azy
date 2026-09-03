@@ -23,6 +23,10 @@ private:
         Token token = peek();
         std::cout << "[Парсер] " << token.value << "\n";
     }
+    
+    struct ASTNode {
+        virtual ~ASTNode() = default;
+    };
 
 public:
     Parser(const std::vector<Token>& toks);
