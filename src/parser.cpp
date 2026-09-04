@@ -75,6 +75,8 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
         return parseDoWhile();
     } else if (check(TokenType::Identifier, "while")) {
         return parseWhile();
+    } else if (check(TokenType::Identifier, "print")){
+        return parsePrint();
     } else if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
         return parseAssignment();
     } else {
@@ -139,6 +141,7 @@ std::unique_ptr<ASTNode> Parser::parseDoWhile() {
     }
 }
 
+// Узел while (BinaryOpNode) {}
 std::unique_ptr<ASTNode> Parser::parseWhile() {
     debugging();
     Token token = consume(); // "while"
@@ -165,6 +168,7 @@ std::unique_ptr<ASTNode> Parser::parseWhile() {
     return std::make_unique<WhileNode>(std::move(condition), std::move(body));
 }
 
+// Узел If (BinaryOpNode) {Block_code}
 std::unique_ptr<ASTNode> Parser::parseIf() {
     debugging();
     Token token = consume(); // "if"
@@ -196,6 +200,7 @@ std::unique_ptr<ASTNode> Parser::parseIf() {
     return std::make_unique<IfNode>(std::move(condition), std::move(thenBody), std::move(elseBody));
 }
 
+// Узел else {Block_code}
 std::unique_ptr<ASTNode> Parser::parseElse() {
     debugging();
     consume(); // "else"
@@ -210,6 +215,39 @@ std::unique_ptr<ASTNode> Parser::parseElse() {
     }
 }
 
+// Узел вывода текста
+std::unique_ptr<ASTNode> Parser::parsePrint() {
+    debugging();
+    consume();
+
+    bool newline = false;
+
+    // Проверяем опциональный модификатор .ln
+    if (check(TokenType::Operator, ".")) {
+        consume(); // съедаем точку
+        if (check(TokenType::Identifier, "ln")) {
+            consume(); // съедаем "ln"
+            newline = true;
+        } else {
+            parserError(peek(), "Ожидался модификатор 'ln' после точки в print");
+        }
+    }
+    if (peek().value != "(") {
+        parserError(peek(), "Ожидалась открывающая скобка '(' после print");
+    }
+    consume(); // '('
+
+    auto expr = parseLogicalOr();
+    if (peek().value != ")") {
+        parserError(peek(), "Ожидалась закрывающая скобка ')' после аргументов print");
+    }
+    consume(); // ')'
+    Close_block();
+    return std::make_unique<PrintNode>(std::move(expr), newline);
+}
+
+// Узел присваивания 
+// Identificator = parseLogicalOr
 std::unique_ptr<ASTNode> Parser::parseAssignment() {
     Token varName = consume(); // идентификатор
     consume(); // '='
@@ -348,3 +386,7 @@ std::unique_ptr<ExpressionNode> Parser::parsePrimary() {
         return nullptr;
     }
 }
+
+// ============================================================
+// 
+// ============================================================

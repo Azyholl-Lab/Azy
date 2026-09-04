@@ -53,6 +53,14 @@ struct DoWhileNode : ASTNode {
         : body(std::move(b)), condition(std::move(cond)) {}
 };
 
+// Узел вывода текста
+struct PrintNode : ASTNode {
+    std::unique_ptr<ExpressionNode> expr;
+    bool newline;   // true, если был модификатор .ln
+    PrintNode(std::unique_ptr<ExpressionNode> e, bool nl)
+        : expr(std::move(e)), newline(nl) {}
+};
+
 // Узлы для выражений
 struct LiteralNode : ExpressionNode {
     enum Type { Int, Float, String };
@@ -148,6 +156,11 @@ public:
             printAST(doWhile->condition.get(), 0);
             std::cout << ")\n";
         }
+        else if (auto printNode = dynamic_cast<const PrintNode*>(node)) {
+            std::cout << pad << "Print" << (printNode->newline ? ".ln" : "") << " (";
+            printAST(printNode->expr.get(), 0);
+            std::cout << ")\n";
+        }
         else if (auto literal = dynamic_cast<const LiteralNode*>(node)) {
             std::cout << pad << "Literal(";
             switch (literal->type) {
@@ -203,6 +216,8 @@ public:
     std::unique_ptr<ASTNode> parseWhile();
     std::unique_ptr<ASTNode> parseDoWhile();
     std::unique_ptr<ASTNode> parseAssignment();
+
+    std::unique_ptr<ASTNode> parsePrint();
 
     // Методы разбора выражений (возвращают ExpressionNode)
     std::unique_ptr<ExpressionNode> parseLogicalOr();
