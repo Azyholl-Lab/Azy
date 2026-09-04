@@ -98,10 +98,13 @@ private:
     bool check(TokenType type, const std::string& value);
     bool checkNext(TokenType type, const std::string& value);
 
-    void debugging() {
+    void debugging( bool debug = false) {
+        if (debug){
         Token token = peek();
         std::cout << "[Парсер] " << token.value << "\n";
-    }
+    }}
+
+    void Close_block();
 
 public:
     Parser(const std::vector<Token>& toks);

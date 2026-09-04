@@ -40,6 +40,14 @@ bool Parser::checkNext(TokenType type, const std::string& value) {
     return (peekNext().type == type && peekNext().value == value);
 }
 
+void Parser::Close_block(){
+    if (check(TokenType::Operator, ";")){
+        consume();
+    } else {
+        parserError(peek(), "Синтаксическая ошибка: ожидался терминатор: '" + peek().value + "'");
+    }
+}
+
 // ============================================================
 // Главный цикл разбора – возвращает корневой блок
 // ============================================================
@@ -70,7 +78,7 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
     } else if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
         return parseAssignment();
     } else {
-        parserError(peek(), "Синтаксическая ошибка: неожиданный токен '" + peek().value + "'");
+        //parserError(peek(), "Синтаксическая ошибка: неожиданный токен '" + peek().value + "'");
         consume(); // чтобы избежать бесконечного цикла
         return nullptr;
     }
@@ -206,6 +214,7 @@ std::unique_ptr<ASTNode> Parser::parseAssignment() {
     Token varName = consume(); // идентификатор
     consume(); // '='
     auto expr = parseLogicalOr();
+    Close_block();
     return std::make_unique<AssignmentNode>(varName.value, std::move(expr));
 }
 
