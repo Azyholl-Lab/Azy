@@ -69,23 +69,28 @@ std::unique_ptr<ASTNode> Parser::parse() {
 // Разбор операторов (возвращают узел AST)
 // ============================================================
 std::unique_ptr<ASTNode> Parser::parseStatement() {
-    if (check(TokenType::Identifier, "if")) {
+    if (check(TokenType::Identifier, "define") || check(TokenType::Identifier, "fn")) {
+        return parseFunctionDef();
+    } else if (check(TokenType::Identifier, "if")) {
         return parseIf();
     } else if (check(TokenType::Identifier, "do")) {
         return parseDoWhile();
     } else if (check(TokenType::Identifier, "while")) {
         return parseWhile();
-    } else if (check(TokenType::Identifier, "print")){
-        return parsePrint();
+    } else if (check(TokenType::Identifier, "for")) {
+        return parseFor();
+    } else if (check(TokenType::Identifier, "struct")) {
+        return parseStructDef(false);
+    } else if (check(TokenType::Identifier, "class")) {
+        return parseStructDef(true);
     } else if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
         return parseAssignment();
     } else {
-        //parserError(peek(), "Синтаксическая ошибка: неожиданный токен '" + peek().value + "'");
-        consume(); // чтобы избежать бесконечного цикла
+        parserError(peek(), "Синтаксическая ошибка: неожиданный токен '" + peek().value + "'");
+        consume(); 
         return nullptr;
     }
 }
-
 std::unique_ptr<ASTNode> Parser::parseBlock() {
     debugging();
     consume(); // '{'
@@ -385,6 +390,131 @@ std::unique_ptr<ExpressionNode> Parser::parsePrimary() {
         parserError(tok, "Синтаксическая ошибка: неожиданный токен '" + tok.value + "'");
         return nullptr;
     }
+}
+
+std::unique_ptr<ASTNode> Parser::parseFor() {
+    consume(); // "for"
+    if (peek().value != "(") parserError(peek(), "Ожидалась '(' после 'for'");
+    consume(); // "("
+
+    std::unique_ptr<ASTNode> init = nullptr;
+    if (peek().value != ";") {
+        // Для прототипа поддерживаем только присваивание в инициализации (e.g., i = 0)
+        if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
+            init = parseAssignment();
+        } else {
+            parserError(peek(), "В инициализации for ожидается присваивание (e.g., i = 0)");
+        }
+    }
+    if (peek().value != ";") parserError(peek(), "Ожидалась ';' после инициализации в for");
+    consume(); // ";"
+
+    std::unique_ptr<ExpressionNode> condition = nullptr;
+    if (peek().value != ";") {
+        condition = parseLogicalOr();
+    }
+    if (peek().value != ";") parserError(peek(), "Ожидалась ';' после условия в for");
+    consume(); // ";"
+
+    std::unique_ptr<ASTNode> step = nullptr;
+    if (peek().value != ")") {
+        if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
+            step = parseAssignment();
+        } else {
+            parserError(peek(), "В шаге for ожидается присваивание (e.g., i = i + 1)");
+        }
+    }
+    if (peek().value != ")") parserError(peek(), "Ожидалась ')' после шага в for");
+    consume(); // ")"
+
+    std::unique_ptr<ASTNode> body;
+    if (peek().value == "{") {
+        body = parseBlock();
+    } else {
+        parserError(peek(), "Ожидался блок кода '{...}' после for");
+    }
+
+    return std::make_unique<ForNode>(std::move(init), std::move(condition), std::move(step), std::move(body));
+}
+
+std::unique_ptr<ASTNode> Parser::parseStructDef(bool isClass) {
+    Token keywordToken = consume(); // "struct" или "class"
+    Token nameToken = consume();
+    if (nameToken.type != TokenType::Identifier) {
+        parserError(nameToken, "Ожидалось имя после '" + keywordToken.value + "'");
+    }
+
+    if (peek().value != "{") parserError(peek(), "Ожидалась '{' после имени struct/class");
+    consume(); // "{"
+
+    std::vector<std::unique_ptr<FieldDeclNode>> fields;
+    while (peek().value != "}" && peek().type != TokenType::Unknown) {
+        // Ожидаем: Тип Имя ;
+        Token typeToken = consume();
+        Token fieldToken = consume();
+        
+        if (peek().value != ";") {
+            parserError(peek(), "Ожидалась ';' после объявления поля");
+        }
+        consume(); // ";"
+
+        fields.push_back(std::make_unique<FieldDeclNode>(typeToken.value, fieldToken.value));
+    }
+
+    if (peek().value != "}") parserError(peek(), "Незакрытая '{' в определении struct/class");
+    consume(); // "}"
+
+    return std::make_unique<StructDefNode>(nameToken.value, isClass, std::move(fields));
+}
+std::unique_ptr<ASTNode> Parser::parseFunctionDef() {
+    Token keywordTok = consume(); // "define" или "fn"
+    
+    Token nameTok = consume();
+    if (nameTok.type != TokenType::Identifier) {
+        parserError(nameTok, "Ожидалось имя функции после '" + keywordTok.value + "'");
+    }
+
+    if (peek().value != "(") {
+        parserError(peek(), "Ожидалась '(' после имени функции");
+    }
+    consume(); // "("
+
+    std::vector<ParamNode> params;
+    // Парсим параметры, пока не встретим ')'
+    while (peek().value != ")" && peek().type != TokenType::Unknown) {
+        Token typeTok = consume();
+        Token nameParamTok = consume();
+        
+        params.push_back({typeTok.value, nameParamTok.value});
+
+        if (peek().value == ",") {
+            consume(); // запятая между параметрами
+        } else if (peek().value != ")") {
+            parserError(peek(), "Ожидалась ',' или ')' в списке параметров");
+        }
+    }
+
+    if (peek().value != ")") {
+        parserError(peek(), "Незакрытая '(' в объявлении функции");
+    }
+    consume(); // ")"
+
+    // Опционально: здесь можно добавить парсинг возвращаемого типа (например, "-> int")
+    // Для прототипа оставим "void"
+    std::string returnType = "void";
+    if (check(TokenType::Operator, "->")) {
+        consume(); // "->"
+        returnType = consume().value; // читаем тип возврата
+    }
+
+    std::unique_ptr<ASTNode> body = nullptr;
+    if (peek().value == "{") {
+        body = parseBlock(); // parseBlock уже возвращает unique_ptr<ASTNode> (внутри которого BlockNode)
+    } else {
+        parserError(peek(), "Ожидался блок кода '{...}' для тела функции");
+    }
+
+    return std::make_unique<FunctionDefNode>(nameTok.value, std::move(params), returnType, std::move(body));
 }
 
 // ============================================================

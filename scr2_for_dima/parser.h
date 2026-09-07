@@ -29,6 +29,55 @@ struct AssignmentNode : ASTNode {
         : varName(name), expr(std::move(e)) {}
 };
 
+// --- Новые узлы для parser.h ---
+
+// Узел объявления поля в struct/class
+struct FieldDeclNode : ASTNode {
+    std::string typeName;
+    std::string fieldName;
+    FieldDeclNode(std::string type, std::string name) 
+        : typeName(std::move(type)), fieldName(std::move(name)) {}
+};
+
+// Узел объявления struct или class
+struct StructDefNode : ASTNode {
+    std::string name;
+    bool isClass; // true для class, false для struct
+    std::vector<std::unique_ptr<FieldDeclNode>> fields;
+    
+    StructDefNode(std::string n, bool isCls, std::vector<std::unique_ptr<FieldDeclNode>> f)
+        : name(std::move(n)), isClass(isCls), fields(std::move(f)) {}
+};
+
+// Узел цикла for
+struct ForNode : ASTNode {
+    std::unique_ptr<ASTNode> init;          // Обычно AssignmentNode или nullptr
+    std::unique_ptr<ExpressionNode> condition; // Обычно BinaryOpNode или nullptr
+    std::unique_ptr<ASTNode> step;          // Обычно AssignmentNode или nullptr
+    std::unique_ptr<ASTNode> body;
+    
+    ForNode(std::unique_ptr<ASTNode> i, std::unique_ptr<ExpressionNode> c, 
+            std::unique_ptr<ASTNode> s, std::unique_ptr<ASTNode> b)
+        : init(std::move(i)), condition(std::move(c)), step(std::move(s)), body(std::move(b)) {}
+};
+
+// Узел параметра функции
+struct ParamNode {
+    std::string type;
+    std::string name;
+};
+
+// Узел объявления функции
+struct FunctionDefNode : ASTNode {
+    std::string name;
+    std::vector<ParamNode> params;
+    std::string returnType; // Пока "void" или выводится позже
+    std::unique_ptr<ASTNode> body; // Обычно это BlockNode
+
+    FunctionDefNode(std::string n, std::vector<ParamNode> p, std::string ret, std::unique_ptr<ASTNode> b)
+        : name(std::move(n)), params(std::move(p)), returnType(std::move(ret)), body(std::move(b)) {}
+};
+
 struct IfNode : ASTNode {
     std::unique_ptr<ExpressionNode> condition;
     std::unique_ptr<ASTNode> thenBody;
@@ -185,6 +234,32 @@ public:
             printAST(binary->right.get(), 0);
             std::cout << ")";
         }
+                else if (auto forNode = dynamic_cast<const ForNode*>(node)) {
+            std::cout << pad << "For (\n";
+            std::cout << pad << "  Init: "; if(forNode->init) printAST(forNode->init.get(), 0); else std::cout << "None"; std::cout << "\n";
+            std::cout << pad << "  Cond: "; if(forNode->condition) printAST(forNode->condition.get(), 0); else std::cout << "None"; std::cout << "\n";
+            std::cout << pad << "  Step: "; if(forNode->step) printAST(forNode->step.get(), 0); else std::cout << "None"; std::cout << "\n";
+            std::cout << pad << ") {\n";
+            printAST(forNode->body.get(), indent + 1);
+            std::cout << pad << "}\n";
+        }
+        else if (auto structNode = dynamic_cast<const StructDefNode*>(node)) {
+            std::cout << pad << (structNode->isClass ? "Class" : "Struct") << " " << structNode->name << " {\n";
+            for (const auto& field : structNode->fields) {
+                std::cout << pad << "  Field: " << field->typeName << " " << field->fieldName << "\n";
+            }
+            std::cout << pad << "}\n";
+        }
+                else if (auto func = dynamic_cast<const FunctionDefNode*>(node)) {
+            std::cout << pad << "Function: " << func->name << "(";
+            for (size_t i = 0; i < func->params.size(); ++i) {
+                std::cout << func->params[i].type << " " << func->params[i].name;
+                if (i + 1 < func->params.size()) std::cout << ", ";
+            }
+            std::cout << ") -> " << func->returnType << " {\n";
+            printAST(func->body.get(), indent + 1);
+            std::cout << pad << "}\n";
+        }
         else {
             std::cout << pad << "Unknown node\n";
         }
@@ -216,6 +291,10 @@ public:
     std::unique_ptr<ASTNode> parseWhile();
     std::unique_ptr<ASTNode> parseDoWhile();
     std::unique_ptr<ASTNode> parseAssignment();
+
+    std::unique_ptr<ASTNode> parseFor();
+    std::unique_ptr<ASTNode> parseStructDef(bool isClass);
+    std::unique_ptr<ASTNode> parseFunctionDef();
 
     std::unique_ptr<ASTNode> parsePrint();
 
