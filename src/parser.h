@@ -53,6 +53,22 @@ struct DoWhileNode : ASTNode {
         : body(std::move(b)), condition(std::move(cond)) {}
 };
 
+struct ForNode : ASTNode {
+    // Форма 1 и 2:
+    std::string varName;                          // "i"
+    std::unique_ptr<ASTNode> init;                // i = 0 (может быть nullptr)
+    std::unique_ptr<ExpressionNode> condition;    // i == x (может быть nullptr)
+    std::unique_ptr<ASTNode> step;                // i++ (может быть nullptr)
+
+    // Форма 3 (foreach):
+    std::unique_ptr<ExpressionNode> iterable;     // (int/string/array)
+    bool isForeach = false;
+
+    std::unique_ptr<ASTNode> body;
+
+    ForNode() = default;
+};
+
 // Узел вывода текста
 struct PrintNode : ASTNode {
     std::unique_ptr<ExpressionNode> expr;
@@ -156,6 +172,27 @@ public:
             printAST(doWhile->condition.get(), 0);
             std::cout << ")\n";
         }
+        else if (auto forNode = dynamic_cast<const ForNode*>(node)) {
+            if (forNode->isForeach) {
+                std::cout << pad << "For (" << forNode->varName << " in ";
+                printAST(forNode->iterable.get(), 0);
+                std::cout << ") {\n";
+            } else {
+                std::cout << pad << "For (" << forNode->varName << ":\n";
+                std::cout << pad << "  init: ";
+                if (forNode->init) printAST(forNode->init.get(), 0);
+                else std::cout << forNode->varName << " = 0";
+                std::cout << "\n" << pad << "  cond: ";
+                if (forNode->condition) printAST(forNode->condition.get(), 0);
+                else std::cout << "null";
+                std::cout << "\n" << pad << "  step: ";
+                if (forNode->step) printAST(forNode->step.get(), 0);
+                else std::cout << forNode->varName << "++";
+                std::cout << "\n";
+            }
+            printAST(forNode->body.get(), indent + 1);
+            std::cout << pad << "}\n";
+        }
         else if (auto printNode = dynamic_cast<const PrintNode*>(node)) {
             std::cout << pad << "Print" << (printNode->newline ? ".ln" : "") << " (";
             printAST(printNode->expr.get(), 0);
@@ -215,6 +252,12 @@ public:
     std::unique_ptr<ASTNode> parseElse();
     std::unique_ptr<ASTNode> parseWhile();
     std::unique_ptr<ASTNode> parseDoWhile();
+
+    std::unique_ptr<ASTNode> parseFor();
+    std::unique_ptr<ASTNode> parseForInit();
+    std::unique_ptr<ASTNode> parseForStep();
+    std::unique_ptr<ASTNode> parseForBody();
+
     std::unique_ptr<ASTNode> parseAssignment();
 
     std::unique_ptr<ASTNode> parsePrint();

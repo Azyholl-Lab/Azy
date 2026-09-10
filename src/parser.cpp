@@ -75,7 +75,9 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
         return parseDoWhile();
     } else if (check(TokenType::Identifier, "while")) {
         return parseWhile();
-    } else if (check(TokenType::Identifier, "print")){
+    } else if (check(TokenType::Identifier, "for")) {
+        return parseFor();
+    } else if (check(TokenType::Identifier, "print")) {
         return parsePrint();
     } else if (peek().type == TokenType::Identifier && checkNext(TokenType::Operator, "=")) {
         return parseAssignment();
@@ -167,6 +169,177 @@ std::unique_ptr<ASTNode> Parser::parseWhile() {
     }
     return std::make_unique<WhileNode>(std::move(condition), std::move(body));
 }
+
+// ============================================================
+// Цикл for: три формы
+//   for (i == x)               — сокращённая
+//   for (i = 0; i == x; i++)   — полная
+//   for (i in (int/string/array)) — foreach
+// ============================================================
+std::unique_ptr<ASTNode> Parser::parseFor() {
+    debugging();
+    consume(); // "for"
+
+    if (peek().value != "(") {
+        parserError(peek(), "Ожидалась '(' после 'for'");
+        return nullptr;
+    }
+    consume(); // '('
+
+    if (peek().type != TokenType::Identifier) {
+        parserError(peek(), "Ожидался идентификатор переменной цикла");
+        return nullptr;
+    }
+
+    std::string varName = peek().value;
+    Token next = peekNext();
+
+    // ================== ФОРМА 3: for (i in ...) ==================
+    if (next.type == TokenType::Identifier && next.value == "in") {
+        consume(); // i
+        consume(); // in
+
+        auto iterable = parseLogicalOr();
+        if (!iterable) return nullptr;
+
+        if (peek().value != ")") {
+            parserError(peek(), "Ожидалась ')' после for-in");
+            return nullptr;
+        }
+        consume(); // ')'
+
+        auto body = parseForBody();
+        if (!body) return nullptr;
+
+        auto node = std::make_unique<ForNode>();
+        node->varName   = varName;
+        node->iterable  = std::move(iterable);
+        node->isForeach = true;
+        node->body      = std::move(body);
+        return node;
+    }
+
+    // ================== ФОРМА 1: for (i == x) ==================
+    if (next.type == TokenType::Operator && next.value == "==") {
+        consume(); // i
+        consume(); // ==
+        auto cond = parseLogicalOr();
+        if (!cond) return nullptr;
+
+        if (peek().value != ")") {
+            parserError(peek(), "Ожидалась ')' после условия for");
+            return nullptr;
+        }
+        consume(); // ')'
+
+        auto body = parseForBody();
+        if (!body) return nullptr;
+
+        auto node = std::make_unique<ForNode>();
+        node->varName   = varName;
+        node->init      = nullptr;   // по умолчанию i = 0
+        node->condition = std::move(cond);
+        node->step      = nullptr;   // по умолчанию i++
+        node->body      = std::move(body);
+        return node;
+    }
+
+    // ================== ФОРМА 2: for (i = 0; i == x; i++) ==================
+    if (next.type == TokenType::Operator && next.value == "=") {
+        auto init = parseForInit();
+        if (!init) return nullptr;
+
+        if (peek().value != ";") {
+            parserError(peek(), "Ожидался ';' после инициализации for");
+            return nullptr;
+        }
+        consume(); // ';'
+
+        auto cond = parseLogicalOr();
+        if (!cond) return nullptr;
+
+        if (peek().value != ";") {
+            parserError(peek(), "Ожидался ';' после условия for");
+            return nullptr;
+        }
+        consume(); // ';'
+
+        auto step = parseForStep();
+        if (!step) return nullptr;
+
+        if (peek().value != ")") {
+            parserError(peek(), "Ожидалась ')' после шага for");
+            return nullptr;
+        }
+        consume(); // ')'
+
+        auto body = parseForBody();
+        if (!body) return nullptr;
+
+        auto node = std::make_unique<ForNode>();
+        node->varName   = varName;
+        node->init      = std::move(init);
+        node->condition = std::move(cond);
+        node->step      = std::move(step);
+        node->body      = std::move(body);
+        return node;
+    }
+
+    parserError(peek(), "Неизвестная форма for: ожидалось '=', '==' или 'in' после переменной");
+    return nullptr;
+}
+
+// init в полной форме: i = <expr>
+std::unique_ptr<ASTNode> Parser::parseForInit() {
+    if (peek().type != TokenType::Identifier) {
+        parserError(peek(), "Ожидался идентификатор в инициализации for");
+        return nullptr;
+    }
+    std::string name = consume().value; // i
+    if (!check(TokenType::Operator, "=")) {
+        parserError(peek(), "Ожидался '=' в инициализации for");
+        return nullptr;
+    }
+    consume(); // '='
+    auto expr = parseLogicalOr();
+    return std::make_unique<AssignmentNode>(name, std::move(expr));
+}
+
+// step в полной форме: i++ / i-- / i = expr
+std::unique_ptr<ASTNode> Parser::parseForStep() {
+    if (peek().type != TokenType::Identifier) {
+        parserError(peek(), "Ожидался идентификатор в шаге for");
+        return nullptr;
+    }
+    std::string name = consume().value; // i
+
+    // i++ / i--
+    if (peek().value == "++" || peek().value == "--") {
+        std::string op = consume().value;
+        auto var = std::make_unique<VariableNode>(name);
+        return std::make_unique<UnaryOpNode>(op + "_post", std::move(var));
+    }
+
+    // i = expr
+    if (check(TokenType::Operator, "=")) {
+        consume();
+        auto expr = parseLogicalOr();
+        return std::make_unique<AssignmentNode>(name, std::move(expr));
+    }
+
+    parserError(peek(), "Ожидался '++', '--' или '=' в шаге for");
+    return nullptr;
+}
+
+// тело цикла — блок { ... }
+std::unique_ptr<ASTNode> Parser::parseForBody() {
+    if (peek().value != "{") {
+        parserError(peek(), "Ожидался блок кода '{...}' после for");
+        return nullptr;
+    }
+    return parseBlock();
+}
+
 
 // Узел If (BinaryOpNode) {Block_code}
 std::unique_ptr<ASTNode> Parser::parseIf() {
@@ -372,7 +545,12 @@ std::unique_ptr<ExpressionNode> Parser::parsePrimary() {
         return std::make_unique<LiteralNode>(LiteralNode::String, tok.value);
     } else if (tok.type == TokenType::Identifier) {
         consume();
-        return std::make_unique<VariableNode>(tok.value);
+        auto var = std::make_unique<VariableNode>(tok.value);
+        if (peek().value == "++" || peek().value == "--") {
+            std::string op = consume().value;
+            return std::make_unique<UnaryOpNode>(op + "_post", std::move(var));
+        }
+        return var;
     } else if (tok.value == "(") {
         consume(); // '('
         auto expr = parseLogicalOr();
