@@ -18,4 +18,9 @@ add_executable(AZY_compiler
     src/parser.cpp
     src/parser.h
 
+<<<<<<< HEAD
 )
+=======
+    
+)
+>>>>>>> 342f95ea9e250139aa4d8e61eeb381d5d7311fe4
