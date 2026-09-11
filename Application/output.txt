@@ -1,0 +1,218 @@
+Главный файл запущен. Читаем токены...
+Лексер закончил свою работу
+Всего сохранено токенов в массив: 705
+ 
+ 
+Запущен парсер...
+Готовое дерево AST: 
+ 
+Block {
+  Assignment: i = Literal(int, "42")
+  Assignment: f = Literal(float, "3.14")
+  Assignment: f2 = Literal(float, ".5")
+  Assignment: s = Literal(string, "Hello, Azy!")
+  Assignment: t = Literal(bool, "true")
+  Assignment: fa = Literal(bool, "false")
+  Assignment: a = Literal(int, "10")
+  Assignment: a += Literal(int, "5")
+  Assignment: a -= Literal(int, "3")
+  Assignment: a *= Literal(int, "2")
+  Assignment: a /= Literal(int, "4")
+  Assignment: x = BinaryOp("+", Literal(int, "2"), BinaryOp("*", Literal(int, "3"), Literal(int, "4")))
+  Assignment: y = BinaryOp("*", BinaryOp("+", Literal(int, "2"), Literal(int, "3")), Literal(int, "4"))
+  Assignment: z = BinaryOp("-", BinaryOp("-", Literal(int, "10"), Literal(int, "5")), Literal(int, "2"))
+  Assignment: w = BinaryOp("/", BinaryOp("/", Literal(int, "20"), Literal(int, "4")), Literal(int, "5"))
+  Assignment: neg = UnaryOp("-", Literal(int, "5"))
+  Assignment: mixed = BinaryOp("+", BinaryOp("*", UnaryOp("-", Literal(int, "3")), UnaryOp("-", Literal(int, "2"))), Literal(int, "10"))
+  Assignment: c1 = BinaryOp("==", Variable("a"), Literal(int, "10"))
+  Assignment: c2 = BinaryOp("!=", Variable("a"), Literal(int, "5"))
+  Assignment: c3 = BinaryOp("<", Variable("a"), Literal(int, "100"))
+  Assignment: c4 = BinaryOp(">", Variable("a"), Literal(int, "1"))
+  Assignment: c5 = BinaryOp("<=", Variable("a"), Literal(int, "10"))
+  Assignment: c6 = BinaryOp(">=", Variable("a"), Literal(int, "10"))
+  Assignment: c7 = BinaryOp("&&", Literal(bool, "true"), Literal(bool, "false"))
+  Assignment: c8 = BinaryOp("||", Literal(bool, "true"), Literal(bool, "false"))
+  Assignment: c9 = UnaryOp("!", Literal(bool, "true"))
+  Assignment: c10 = UnaryOp("not", Literal(bool, "false"))
+  Assignment: c11 = BinaryOp("||", BinaryOp("&&", BinaryOp(">", Variable("a"), Literal(int, "5")), BinaryOp("<", Variable("f"), Literal(float, "10.0"))), BinaryOp("==", Variable("s"), Literal(string, "x")))
+  Assignment: c12 = BinaryOp("||", UnaryOp("!", BinaryOp("==", Variable("a"), Literal(int, "10"))), UnaryOp("!", BinaryOp("!=", Variable("b"), Literal(int, "0"))))
+  Assignment: counter = Literal(int, "0")
+  UnaryOp("++_post", Variable("counter"))
+  UnaryOp("--_post", Variable("counter"))
+  Assignment: value = UnaryOp("-", Variable("counter"))
+  If (BinaryOp("==", Variable("a"), Literal(int, "10"))) {
+    Block {
+      Assignment: message = Literal(string, "a равно 10")
+    }
+  }
+  If (BinaryOp(">", Variable("a"), Literal(int, "100"))) {
+    Block {
+      Assignment: message = Literal(string, "больше")
+    }
+  } else {
+    Block {
+      Assignment: message = Literal(string, "не больше")
+    }
+  }
+  If (BinaryOp("==", Variable("a"), Literal(int, "1"))) {
+    Block {
+      Assignment: r = Literal(string, "one")
+    }
+  } else {
+    If (BinaryOp("==", Variable("a"), Literal(int, "2"))) {
+      Block {
+        Assignment: r = Literal(string, "two")
+      }
+    } else {
+      If (BinaryOp("==", Variable("a"), Literal(int, "3"))) {
+        Block {
+          Assignment: r = Literal(string, "three")
+        }
+      } else {
+        Block {
+          Assignment: r = Literal(string, "other")
+        }
+      }
+    }
+  }
+  If (BinaryOp(">", Variable("a"), Literal(int, "0"))) {
+    Block {
+      If (BinaryOp(">", Variable("a"), Literal(int, "100"))) {
+        Block {
+          Assignment: big = Literal(bool, "true")
+        }
+      } else {
+        Block {
+          Assignment: big = Literal(bool, "false")
+        }
+      }
+    }
+  }
+  Assignment: i = Literal(int, "0")
+  While (BinaryOp("<", Variable("i"), Literal(int, "10"))) {
+    Block {
+      UnaryOp("++_post", Variable("i"))
+    }
+  }
+  Assignment: j = Literal(int, "10")
+  Assignment: sum = Literal(int, "0")
+  While (BinaryOp(">", Variable("j"), Literal(int, "0"))) {
+    Block {
+      Assignment: sum += Variable("j")
+      UnaryOp("--_post", Variable("j"))
+    }
+  }
+  Assignment: k = Literal(int, "0")
+  Do {
+    Block {
+      UnaryOp("++_post", Variable("k"))
+    }
+  } While (BinaryOp("<", Variable("k"), Literal(int, "5")))
+  Assignment: n = Literal(int, "3")
+  Assignment: fact = Literal(int, "1")
+  Do {
+    Block {
+      Assignment: fact *= Variable("n")
+      UnaryOp("--_post", Variable("n"))
+    }
+  } While (BinaryOp(">", Variable("n"), Literal(int, "1")))
+  For (i:
+    init: i = 0
+    cond: BinaryOp("==", Variable("i"), Literal(int, "5"))
+    step: i++
+  ) {
+    Block {
+      Print (Variable("i"))
+    }
+  }
+  For (i:
+    init: i = 0
+    cond: BinaryOp("==", Variable("i"), Literal(int, "3"))
+    step: i++
+  ) {
+    Block {
+      Print (Variable("i"))
+      Print.ln (BinaryOp("*", Variable("i"), Literal(int, "2")))
+    }
+  }
+  For (i:
+    init: Assignment: i = Literal(int, "0")
+    cond: BinaryOp("==", Variable("i"), Literal(int, "10"))
+    step: UnaryOp("++_post", Variable("i"))
+  ) {
+    Block {
+      Print (Variable("i"))
+    }
+  }
+  For (i:
+    init: Assignment: i = Literal(int, "0")
+    cond: BinaryOp("==", Variable("i"), Literal(int, "10"))
+    step: Assignment: i = BinaryOp("+", Variable("i"), Literal(int, "2"))
+  ) {
+    Block {
+      Print (Variable("i"))
+    }
+  }
+  For (i:
+    init: Assignment: i = Literal(int, "0")
+    cond: BinaryOp("==", Variable("i"), Literal(int, "10"))
+    step: UnaryOp("++_post", Variable("i"))
+  ) {
+    Block {
+      If (BinaryOp("==", Variable("i"), Literal(int, "5"))) {
+        Block {
+          Print.ln (Literal(string, "половина"))
+        }
+      }
+    }
+  }
+  Assignment: text = Literal(string, "abc")
+  For (ch in Variable("text")) {
+    Block {
+      Print (Variable("ch"))
+    }
+  }
+  Assignment: name = Literal(string, "Azy")
+  For (c in Variable("name")) {
+    Block {
+      Print.ln (Variable("c"))
+    }
+  }
+  Print (Literal(string, "без переноса"))
+  Print.ln (Literal(string, "с переносом строки"))
+  Print (Literal(int, "42"))
+  Print.ln (Literal(float, "3.14"))
+  Print (Literal(bool, "true"))
+  Print (BinaryOp("+", Variable("a"), BinaryOp("*", Variable("b"), Literal(int, "2"))))
+  Print (BinaryOp("*", BinaryOp("+", Literal(int, "10"), Literal(int, "5")), Literal(int, "2")))
+  Print.ln (Literal(string, "Результат: "))
+  Print (Literal(int, "42"))
+  For (i:
+    init: Assignment: i = Literal(int, "0")
+    cond: BinaryOp("==", Variable("i"), Literal(int, "3"))
+    step: UnaryOp("++_post", Variable("i"))
+  ) {
+    Block {
+      Assignment: j = Literal(int, "0")
+      While (BinaryOp("<", Variable("j"), Literal(int, "3"))) {
+        Block {
+          If (BinaryOp("==", Variable("i"), Variable("j"))) {
+            Block {
+              Print.ln (Literal(string, "диагональ"))
+            }
+          } else {
+            Block {
+              Print (Literal(string, "."))
+            }
+          }
+          UnaryOp("++_post", Variable("j"))
+        }
+      }
+      Print.ln (Literal(string, ""))
+    }
+  }
+  Assignment: result = BinaryOp("/", BinaryOp("*", BinaryOp("+", Literal(int, "2"), Literal(int, "3")), BinaryOp("-", Literal(int, "4"), Literal(int, "1"))), BinaryOp("+", BinaryOp("/", Literal(int, "10"), Literal(int, "2")), Literal(int, "1")))
+  Assignment: cond = BinaryOp("&&", BinaryOp("&&", BinaryOp(">", Variable("a"), Literal(int, "5")), BinaryOp("||", BinaryOp("<", Variable("f"), Literal(float, "10.0")), BinaryOp("!=", Variable("s"), Literal(string, "none")))), UnaryOp("!", BinaryOp("==", Variable("t"), Variable("fa"))))
+}
+Парсер закончил свою работу
+ 
