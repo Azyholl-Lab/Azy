@@ -5,7 +5,7 @@
 #include <iostream>
 
 // ============================================================
-// Реализация Parser
+// Parser: конструктор и базовые операции с токенами
 // ============================================================
 
 Parser::Parser(const std::vector<Token>& toks) : tokens(toks), currentPos(0) {}
@@ -51,6 +51,7 @@ void Parser::Close_block(){
 // ============================================================
 // Главный цикл разбора – возвращает корневой блок
 // ============================================================
+
 std::unique_ptr<ASTNode> Parser::parse() {
     auto block = std::make_unique<BlockNode>();
     while (currentPos < tokens.size()) {
@@ -67,8 +68,9 @@ std::unique_ptr<ASTNode> Parser::parse() {
 }
 
 // ============================================================
-// Разбор операторов (возвращают узел AST)
+// Разбор операторов: диспетчер и блоки
 // ============================================================
+
 std::unique_ptr<ASTNode> Parser::parseStatement() {
     if (check(TokenType::Identifier, "if")) {
         return parseIf();
@@ -127,8 +129,60 @@ std::unique_ptr<ASTNode> Parser::parseBlock() {
 }
 
 // ============================================================
-// Конкретные операторы
+// Операторы ветвления
 // ============================================================
+
+// Узел If (BinaryOpNode) {Block_code}
+std::unique_ptr<ASTNode> Parser::parseIf() {
+    debugging();
+    Token token = consume(); // "if"
+
+    if (peek().value != "(") {
+        parserError(peek(), "Ожидалась открывающая скобка '(' после 'if'");
+        return nullptr;
+    }
+    consume(); // '('
+    auto condition = parseLogicalOr();
+    if (peek().value != ")") {
+        parserError(peek(), "Ожидалась закрывающая скобка ')' после условия");
+        return nullptr;
+    }
+    consume(); // ')'
+
+    std::unique_ptr<ASTNode> thenBody;
+    if (peek().value == "{") {
+        thenBody = parseBlock();
+    } else {
+        parserError(peek(), "Ожидался блок кода '{...}' после условия");
+        return nullptr;
+    }
+
+    std::unique_ptr<ASTNode> elseBody = nullptr;
+    if (check(TokenType::Identifier, "else")) {
+        elseBody = parseElse();
+    }
+    return std::make_unique<IfNode>(std::move(condition), std::move(thenBody), std::move(elseBody));
+}
+
+// Узел else {Block_code}
+std::unique_ptr<ASTNode> Parser::parseElse() {
+    debugging();
+    consume(); // "else"
+
+    if (check(TokenType::Identifier, "if")) {
+        return parseIf(); // else if
+    } else if (peek().value == "{") {
+        return parseBlock();
+    } else {
+        parserError(peek(), "Ожидался блок кода '{...}' после 'else'");
+        return nullptr;
+    }
+}
+
+// ============================================================
+// Операторы циклов
+// ============================================================
+
 std::unique_ptr<ASTNode> Parser::parseDoWhile() {
     debugging();
     Token token = consume(); // "do"
@@ -195,6 +249,7 @@ std::unique_ptr<ASTNode> Parser::parseWhile() {
 //   for (i = 0; i == x; i++)   — полная
 //   for (i in (int/string/array)) — foreach
 // ============================================================
+
 std::unique_ptr<ASTNode> Parser::parseFor() {
     debugging();
     consume(); // "for"
@@ -307,16 +362,6 @@ std::unique_ptr<ASTNode> Parser::parseFor() {
     return nullptr;
 }
 
-// Отдельный оператор: i++;  или  i--;
-std::unique_ptr<ASTNode> Parser::parsePostfixStatement() {
-    Token name = consume();
-    std::string op = consume().value;
-    auto var = std::make_unique<VariableNode>(name.value);
-    Close_block();
-    auto unary = std::make_unique<UnaryOpNode>(op + "_post", std::move(var));
-    return std::make_unique<ExpressionStatementNode>(std::move(unary));
-}
-
 // init в полной форме: i = <expr>
 std::unique_ptr<ASTNode> Parser::parseForInit() {
     if (peek().type != TokenType::Identifier) {
@@ -368,6 +413,10 @@ std::unique_ptr<ASTNode> Parser::parseForBody() {
     return parseBlock();
 }
 
+// ============================================================
+// Операторы управления циклом
+// ============================================================
+
 // break;
 std::unique_ptr<ASTNode> Parser::parseBreak() {
     consume();          // "break"
@@ -382,52 +431,9 @@ std::unique_ptr<ASTNode> Parser::parseContinue() {
     return std::make_unique<ContinueNode>();
 }
 
-// Узел If (BinaryOpNode) {Block_code}
-std::unique_ptr<ASTNode> Parser::parseIf() {
-    debugging();
-    Token token = consume(); // "if"
-
-    if (peek().value != "(") {
-        parserError(peek(), "Ожидалась открывающая скобка '(' после 'if'");
-        return nullptr;
-    }
-    consume(); // '('
-    auto condition = parseLogicalOr();
-    if (peek().value != ")") {
-        parserError(peek(), "Ожидалась закрывающая скобка ')' после условия");
-        return nullptr;
-    }
-    consume(); // ')'
-
-    std::unique_ptr<ASTNode> thenBody;
-    if (peek().value == "{") {
-        thenBody = parseBlock();
-    } else {
-        parserError(peek(), "Ожидался блок кода '{...}' после условия");
-        return nullptr;
-    }
-
-    std::unique_ptr<ASTNode> elseBody = nullptr;
-    if (check(TokenType::Identifier, "else")) {
-        elseBody = parseElse();
-    }
-    return std::make_unique<IfNode>(std::move(condition), std::move(thenBody), std::move(elseBody));
-}
-
-// Узел else {Block_code}
-std::unique_ptr<ASTNode> Parser::parseElse() {
-    debugging();
-    consume(); // "else"
-
-    if (check(TokenType::Identifier, "if")) {
-        return parseIf(); // else if
-    } else if (peek().value == "{") {
-        return parseBlock();
-    } else {
-        parserError(peek(), "Ожидался блок кода '{...}' после 'else'");
-        return nullptr;
-    }
-}
+// ============================================================
+// Прочие операторы
+// ============================================================
 
 // Узел вывода текста
 std::unique_ptr<ASTNode> Parser::parsePrint() {
@@ -470,9 +476,20 @@ std::unique_ptr<ASTNode> Parser::parseAssignment() {
     return std::make_unique<AssignmentNode>(varName.value, op, std::move(expr));
 }
 
+// Отдельный оператор: i++;  или  i--;
+std::unique_ptr<ASTNode> Parser::parsePostfixStatement() {
+    Token name = consume();
+    std::string op = consume().value;
+    auto var = std::make_unique<VariableNode>(name.value);
+    Close_block();
+    auto unary = std::make_unique<UnaryOpNode>(op + "_post", std::move(var));
+    return std::make_unique<ExpressionStatementNode>(std::move(unary));
+}
+
 // ============================================================
 // Выражения (возвращают ExpressionNode)
 // ============================================================
+
 std::unique_ptr<ExpressionNode> Parser::parseLogicalOr() {
     auto left = parseLogicalAnd();
     while (true) {
@@ -609,7 +626,3 @@ std::unique_ptr<ExpressionNode> Parser::parsePrimary() {
         return nullptr;
     }
 }
-
-// ============================================================
-// 
-// ============================================================
