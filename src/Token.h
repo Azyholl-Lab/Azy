@@ -69,7 +69,7 @@ enum class TokenType {
     Semicolon,  // ;
     Comma,      // ,
     Colon,      // :
-    Dot         // . (включая использование вида print.ln)
+    Dot         // . 
 };
 
 // Структура токена
@@ -104,7 +104,7 @@ inline std::ostream& operator<<(std::ostream& os, TokenType type) {
         case TokenType::KwContinue: os << "KwContinue"; break;
         case TokenType::KwNot:      os << "KwNot"; break;
 
-        case TokenType::Plus:       os << "Plus"; break; // исправлено на стандартный поток ниже
+        case TokenType::Plus:       os << "Plus"; break;
         case TokenType::Minus:      os << "Minus"; break;
         case TokenType::Multiply:   os << "Multiply"; break;
         case TokenType::Divide:     os << "Divide"; break;
