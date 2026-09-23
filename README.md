@@ -11,7 +11,21 @@
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey?style=for-the-badge&logo=linux&logoColor=white)](#)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](#)
 
+[![Lexer](https://img.shields.io/badge/lexer-complete-success?style=flat-square)](#)
+[![Parser](https://img.shields.io/badge/parser-in%20progress-yellow?style=flat-square)](#)
+[![Semantic](https://img.shields.io/badge/semantic%20analysis-planned-lightgrey?style=flat-square)](#)
+[![Interpreter](https://img.shields.io/badge/interpreter-planned-lightgrey?style=flat-square)](#)
+
 </div>
+
+
+---
+
+## 📚 Документация
+
+Подробное описание языка, синтаксиса, конструкций и грамматики доступно здесь:
+
+- [Документация языка Azy](docs/language.md)
 
 ---
 
@@ -65,6 +79,92 @@
 
 ---
 
+## 🚦 Текущее состояние
+
+| Этап компилятора | Статус | Примечание |
+|---|---|---|
+| 🔤 **Лексический анализ** | ✅ Завершён | Все типы токенов, комментарии, строки, числа, операторы |
+| 🌳 **Синтаксический анализ** | 🟡 В процессе | Основные конструкции разбираются, AST строится |
+| 🧠 Семантический анализ | ⏳ Запланирован | — |
+| ⚙️ Интерпретация AST | ⏳ Запланирован | — |
+| 📦 Кодогенерация | ⏳ Запланирована | — |
+
+### Что уже работает
+
+**Лексер:**
+- Идентификаторы и ключевые слова (`let`, `fn`/`def`, `if`, `else`, `while`, `do`, `for`, `in`, `return`, `break`, `continue`, `not`, `true`, `false`)
+- Числовые литералы: целые (`42`) и с плавающей точкой (`3.14`, `.5`)
+- Строковые литералы
+- Комментарии трёх видов: `#`, `//`, `/* … */`
+- Все операторы: арифметические, сравнения, логические, присваивания, `++`/`--`
+- Разделители: `( ) { } [ ] ; , : .`
+- Точные координаты каждого токена (строка + столбец)
+- Обработка ошибок через `TokenType::Unknown`
+
+**Парсер:**
+- Полностью рабочий AST с `std::unique_ptr`
+- Присваивания: `=`, `+=`, `-=`, `*=`, `/=`
+- Арифметика с правильным приоритетом и ассоциативностью
+- Унарные операторы `-`, `!`, `not`
+- Постфиксные `++` / `--`
+- Логические `&&`, `||` и сравнения `==`, `!=`, `<`, `>`, `<=`, `>=`
+- Условные конструкции: `if`, `else`, `else if`, вложенные `if`
+- Циклы: `while`, `do…while`
+- Цикл `for` в трёх формах:
+  - `for (i == N)` — сокращённая
+  - `for (i = 0; i == N; i++)` — полная C-style
+  - `for (x in iterable)` — foreach
+- Управление циклом: `break`, `continue`
+- Оператор вывода: `print(…)` и `print.ln(…)`
+- Печать AST для отладки (`Parser::printAST`)
+- Понятные сообщения об ошибках с координатами
+
+### Пример исходного кода
+
+```azy
+# Полный тест парсера языка Azy
+
+i = 42;
+f = 3.14;
+s = "Hello, Azy!";
+t = true;
+
+x = 2 + 3 * 4;              # 14 — приоритет соблюдён
+y = (2 + 3) * 4;            # 20
+
+if (i == 42) {
+    print.ln("Ответ найден");
+} else {
+    print.ln("Мимо");
+}
+
+for (i = 0; i == 10; i++) {
+    if (i == 5) {
+        continue;
+    }
+    print(i);
+}
+
+text = "abc";
+for (ch in text) {
+    print(ch);
+}
+```
+
+### Что в работе (TODO)
+
+- Префиксные `++` / `--` (`++i`, `--i`) — в `parseUnary`
+- Массивы: литералы `[1, 2, 3]`, индексация `arr[i]`, присваивание по индексу
+- Функции: определение `def greet(name) { … }`, вызов `greet("мир")`, `return`
+- Встроенные функции: `len`, `range`
+- Тернарный оператор `? :`
+- `switch / case / default`
+- Приведение `KwLet` / `KwFn` к полноценному использованию в грамматике
+- Семантический анализ (типы, области видимости)
+- Интерпретатор AST
+
+---
+
 ## 📂 Структура проекта
 
 ```text
@@ -72,13 +172,14 @@ AZY/
 ├── Application/              # Собранные бинарники и тестовые скрипты (*.azy)
 ├── docs/                     # Документация языка
 ├── src/                      # Исходный код компилятора
-│   ├── lexer.cpp                 # Лексический анализатор
-│   ├── lexer.h
-│   ├── parser.cpp                # Синтаксический анализатор
-│   ├── parser.h                  # Интерфейс парсера и узлы AST
+│   ├── Lexer.cpp                 # Лексический анализатор (готов)
+│   ├── Lexer.h
+│   ├── Parser.cpp                # Синтаксический анализатор (в работе)
+│   ├── Parser.h                  # Интерфейс парсера и узлы AST
 │   ├── Token.h                   # Определение Token и TokenType
 │   └── main.cpp                  # Точка входа
-├── trash/                    # Черновые и архивные наработки
+├── tests/                    # Тестовые сценарии языка
+│   └── test_all.txt              # Полный регресс-тест лексера и парсера
 ├── .gitignore
 ├── CMakeLists.txt
 └── README.md
@@ -88,13 +189,57 @@ AZY/
 
 ## 🗺 Планы развития
 
-- [ ] Лексический анализатор
-- [ ] Синтаксический анализатор
+- [x] Лексический анализатор
+- [ ] Синтаксический анализатор *(в процессе)*
 - [ ] Семантический анализ
 - [ ] Интерпретатор AST
 - [ ] Компиляция в байт-код / нативный код
 - [ ] Стандартная библиотека
 - [ ] Пакетный менеджер
+
+---
+
+## 📐 Грамматика (фрагмент)
+
+```ebnf
+program        → statement* EOF ;
+
+statement      → assignment
+               | ifStatement
+               | whileStatement
+               | doWhileStatement
+               | forStatement
+               | breakStatement
+               | continueStatement
+               | printStatement ;
+
+assignment     → IDENTIFIER ("=" | "+=" | "-=" | "*=" | "/=") expression ";" ;
+
+ifStatement    → "if" "(" expression ")" block ( "else" ( ifStatement | block ) )? ;
+
+whileStatement → "while" "(" expression ")" block ;
+
+doWhileStatement → "do" block "while" "(" expression ")" ";" ;
+
+forStatement   → "for" "(" IDENTIFIER
+                   ( "in" expression
+                   | "==" expression
+                   | "=" expression ";" expression ";" forStep )
+                 ")" block ;
+
+printStatement → "print" ( ".ln" )? "(" expression ")" ";" ;
+
+expression     → logicalOr ;
+logicalOr      → logicalAnd ( "||" logicalAnd )* ;
+logicalAnd     → equality ( "&&" equality )* ;
+equality       → relational ( ( "==" | "!=" ) relational )* ;
+relational     → additive ( ( "<" | ">" | "<=" | ">=" ) additive )* ;
+additive       → multiplicative ( ( "+" | "-" ) multiplicative )* ;
+multiplicative → unary ( ( "*" | "/" ) unary )* ;
+unary          → ( "-" | "!" | "not" ) unary | primary ;
+primary        → INT | FLOAT | STRING | BOOL | IDENTIFIER
+               | "(" expression ")" ;
+```
 
 ---
 
@@ -124,3 +269,5 @@ AZY/
 *Сделано на C++17 и CMake.*
 
 </div>
+
+---
