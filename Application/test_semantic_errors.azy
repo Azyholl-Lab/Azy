@@ -1,0 +1,20 @@
+var x = 10;
+
+fn add(a, b) {
+    return a + b;
+}
+
+print.ln(add(3, 4));
+
+y = add(1, 2);      # S001 — y не объявлена
+z = unknownFunc();  # S001 — unknownFunc не объявлена
+return 5;           # S003 — return вне функции
+break;              # S004 — break вне цикла
+continue;           # S005 — continue вне цикла
+
+var dup = 1;
+var dup = 2;        # S002 — дубль
+
+fn bad(a, a) {      # S002 — дубль параметра
+    return 0;
+}

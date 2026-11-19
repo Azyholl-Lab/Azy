@@ -1,0 +1,21 @@
+fn add(a, b) {
+    return a + b;
+}
+
+fn noop() {
+    return 0;
+}
+
+fn twice(n) {
+    return add(n, n);
+}
+
+var x = add(3, 4);
+var y = add(add(1, 2), 3);
+var z = noop();
+var w = twice(10);
+
+print.ln(x);    # 7
+print.ln(y);    # 6
+print.ln(z);    # 0
+print.ln(w);    # 20

@@ -170,15 +170,15 @@ std::unique_ptr<ASTNode> Parser::parseVarDecl() {
 
     while (true) {
         if (peek().type != TokenType::Identifier) {
-            parserError(ErrCode::P006_ExpectedIdentifier, peek(),
-                        "после 'var'");
+            parserError(ErrCode::P006_ExpectedIdentifier, peek(), "после 'var'");
             return nullptr;
         }
+        SourcePos namePos(peek());       // ⭐
         std::string name = consume().value;
 
         std::unique_ptr<ExpressionNode> init = nullptr;
         if (check(TokenType::Assign)) {
-            consume(); // '='
+            consume();
             init = parseLogicalOr();
             if (!init) {
                 parserError(ErrCode::P007_ExpectedExpression, peek(),
@@ -187,16 +187,13 @@ std::unique_ptr<ASTNode> Parser::parseVarDecl() {
             }
         }
 
-        node->decls.emplace_back(std::move(name), std::move(init));
+        node->decls.emplace_back(std::move(name), std::move(init), namePos); // ⭐
 
-        if (check(TokenType::Comma)) {
-            consume();
-            continue;
-        }
+        if (check(TokenType::Comma)) { consume(); continue; }
         break;
     }
 
-    Close_block(); // ';'
+    Close_block();
     return node;
 }
 
@@ -206,10 +203,10 @@ std::unique_ptr<ASTNode> Parser::parseFunction() {
     consume(); // "fn" или "def"
 
     if (peek().type != TokenType::Identifier) {
-        parserError(ErrCode::P006_ExpectedIdentifier, peek(),
-                    "имени функции");
+        parserError(ErrCode::P006_ExpectedIdentifier, peek(), "имени функции");
         return nullptr;
     }
+    SourcePos namePos(peek());
     std::string name = consume().value;
 
     if (peek().type != TokenType::LParen) {
@@ -217,7 +214,7 @@ std::unique_ptr<ASTNode> Parser::parseFunction() {
                     "после имени функции '" + name + "'");
         return nullptr;
     }
-    consume(); // '('
+    consume();
 
     std::vector<std::string> params;
     if (peek().type != TokenType::RParen) {
@@ -227,9 +224,8 @@ std::unique_ptr<ASTNode> Parser::parseFunction() {
             return nullptr;
         }
         params.push_back(consume().value);
-
         while (peek().type == TokenType::Comma) {
-            consume(); // ','
+            consume();
             if (peek().type != TokenType::Identifier) {
                 parserError(ErrCode::P006_ExpectedIdentifier, peek(),
                             "параметра после ','");
@@ -244,7 +240,7 @@ std::unique_ptr<ASTNode> Parser::parseFunction() {
                     "после параметров функции");
         return nullptr;
     }
-    consume(); // ')'
+    consume();
 
     if (peek().type != TokenType::LBrace) {
         parserError(ErrCode::P004_ExpectedOpeningBrace, peek(),
@@ -254,25 +250,25 @@ std::unique_ptr<ASTNode> Parser::parseFunction() {
     auto body = parseBlock();
 
     return std::make_unique<FunctionNode>(
-        std::move(name), std::move(params), std::move(body));
+        std::move(name), std::move(params), std::move(body), namePos);
 }
 
 // return;  |  return expr;
 std::unique_ptr<ASTNode> Parser::parseReturn() {
     debugging();
+    SourcePos pos(peek());
     consume(); // "return"
 
     std::unique_ptr<ExpressionNode> expr = nullptr;
     if (peek().type != TokenType::Semicolon) {
         expr = parseLogicalOr();
         if (!expr) {
-            parserError(ErrCode::P007_ExpectedExpression, peek(),
-                        "после 'return'");
+            parserError(ErrCode::P007_ExpectedExpression, peek(), "после 'return'");
             return nullptr;
         }
     }
-    Close_block(); // ';'
-    return std::make_unique<ReturnNode>(std::move(expr));
+    Close_block();
+    return std::make_unique<ReturnNode>(std::move(expr), pos);
 }
 
 // ============================================================
@@ -352,113 +348,95 @@ std::unique_ptr<ASTNode> Parser::parseFor() {
     consume(); // "for"
 
     if (peek().type != TokenType::LParen) {
-        parserError(ErrCode::P002_ExpectedOpeningParen, peek(),
-                    "после 'for'");
+        parserError(ErrCode::P002_ExpectedOpeningParen, peek(), "после 'for'");
         return nullptr;
     }
-    consume(); // '('
+    consume();
 
     if (peek().type != TokenType::Identifier) {
-        parserError(ErrCode::P006_ExpectedIdentifier, peek(),
-                    "переменной цикла");
+        parserError(ErrCode::P006_ExpectedIdentifier, peek(), "переменной цикла");
         return nullptr;
     }
 
     std::string varName = peek().value;
+    SourcePos varNamePos(peek());
     Token next = peekNext();
 
-    // ================== ФОРМА 3: for (i in ...) ==================
+    // --- ФОРМА 3: for (i in ...) ---
     if (next.type == TokenType::KwIn) {
-        consume(); // i
-        consume(); // in
-
+        consume(); consume();
         auto iterable = parseLogicalOr();
         if (!iterable) return nullptr;
-
         if (peek().type != TokenType::RParen) {
-            parserError(ErrCode::P003_ExpectedClosingParen, peek(),
-                        "после for-in");
+            parserError(ErrCode::P003_ExpectedClosingParen, peek(), "после for-in");
             return nullptr;
         }
-        consume(); // ')'
-
+        consume();
         auto body = parseForBody();
         if (!body) return nullptr;
-
         auto node = std::make_unique<ForNode>();
         node->varName   = varName;
+        node->varNamePos = varNamePos;
         node->iterable  = std::move(iterable);
         node->isForeach = true;
         node->body      = std::move(body);
         return node;
     }
 
-    // ================== ФОРМА 1: for (i == x) ==================
+    // --- ФОРМА 1: for (i == x) ---
     if (next.type == TokenType::Equal) {
-        // НЕ consume() — parseLogicalOr() сам разберёт "i == 5"
         auto cond = parseLogicalOr();
         if (!cond) return nullptr;
-
         if (peek().type != TokenType::RParen) {
-            parserError(ErrCode::P003_ExpectedClosingParen, peek(),
-                        "после условия for");
+            parserError(ErrCode::P003_ExpectedClosingParen, peek(), "после условия for");
             return nullptr;
         }
-        consume(); // ')'
-
+        consume();
         auto body = parseForBody();
         if (!body) return nullptr;
-
         auto node = std::make_unique<ForNode>();
-        node->varName   = varName;
-        node->init      = nullptr;   // по умолчанию i = 0
-        node->condition = std::move(cond);
-        node->step      = nullptr;   // по умолчанию i++
-        node->body      = std::move(body);
+        node->varName    = varName;
+        node->varNamePos = varNamePos;
+        node->condition  = std::move(cond);
+        node->body       = std::move(body);
         return node;
     }
 
-    // ================== ФОРМА 2: for (i = 0; i == x; i++) ==================
+    // --- ФОРМА 2: for (i = 0; ...; ...) ---
     if (next.type == TokenType::Assign) {
         auto init = parseForInit();
         if (!init) return nullptr;
-
         if (peek().type != TokenType::Semicolon) {
             parserError(ErrCode::P001_ExpectedSemicolon, peek(),
                         "после инициализации for");
             return nullptr;
         }
-        consume(); // ';'
-
+        consume();
         auto cond = parseLogicalOr();
         if (!cond) return nullptr;
-
         if (peek().type != TokenType::Semicolon) {
             parserError(ErrCode::P001_ExpectedSemicolon, peek(),
                         "после условия for");
             return nullptr;
         }
-        consume(); // ';'
-
+        consume();
         auto step = parseForStep();
         if (!step) return nullptr;
-
         if (peek().type != TokenType::RParen) {
             parserError(ErrCode::P003_ExpectedClosingParen, peek(),
                         "после шага for");
             return nullptr;
         }
-        consume(); // ')'
-
+        consume();
         auto body = parseForBody();
         if (!body) return nullptr;
-
         auto node = std::make_unique<ForNode>();
-        node->varName   = varName;
-        node->init      = std::move(init);
-        node->condition = std::move(cond);
-        node->step      = std::move(step);
-        node->body      = std::move(body);
+        node->varName    = varName;
+        node->varNamePos = varNamePos; 
+        node->init       = std::move(init);
+        node->condition  = std::move(cond);
+        node->step       = std::move(step);
+        node->body       = std::move(body);
         return node;
     }
 
@@ -468,9 +446,10 @@ std::unique_ptr<ASTNode> Parser::parseFor() {
 
 // Отдельный оператор: i++;  или  i--;
 std::unique_ptr<ASTNode> Parser::parsePostfixStatement() {
+    SourcePos namePos(peek());
     Token name = consume();
-    std::string op = consume().value;   // "++" или "--"
-    auto var = std::make_unique<VariableNode>(name.value);
+    std::string op = consume().value;
+    auto var = std::make_unique<VariableNode>(name.value, namePos);
     Close_block();
     auto unary = std::make_unique<UnaryOpNode>(op + "_post", std::move(var));
     return std::make_unique<ExpressionStatementNode>(std::move(unary));
@@ -479,43 +458,40 @@ std::unique_ptr<ASTNode> Parser::parsePostfixStatement() {
 // init в полной форме: i = <expr>
 std::unique_ptr<ASTNode> Parser::parseForInit() {
     if (peek().type != TokenType::Identifier) {
-        parserError(ErrCode::P006_ExpectedIdentifier, peek(),
-                    "в инициализации for");
+        parserError(ErrCode::P006_ExpectedIdentifier, peek(), "в инициализации for");
         return nullptr;
     }
-    std::string name = consume().value; // i
+    SourcePos namePos(peek());
+    std::string name = consume().value;
 
     if (!check(TokenType::Assign)) {
-        parserError(ErrCode::P010_ExpectedAssign, peek(),
-                    "в инициализации for");
+        parserError(ErrCode::P010_ExpectedAssign, peek(), "в инициализации for");
         return nullptr;
     }
-    consume(); // '='
+    consume();
     auto expr = parseLogicalOr();
-    return std::make_unique<AssignmentNode>(name, "=", std::move(expr));
+    return std::make_unique<AssignmentNode>(name, "=", std::move(expr), namePos);
 }
 
 // step в полной форме: i++ / i-- / i = expr
 std::unique_ptr<ASTNode> Parser::parseForStep() {
     if (peek().type != TokenType::Identifier) {
-        parserError(ErrCode::P006_ExpectedIdentifier, peek(),
-                    "в шаге for");
+        parserError(ErrCode::P006_ExpectedIdentifier, peek(), "в шаге for");
         return nullptr;
     }
-    std::string name = consume().value; // i
+    SourcePos namePos(peek());
+    std::string name = consume().value;
 
-    // i++ / i--
     if (peek().type == TokenType::Increment || peek().type == TokenType::Decrement) {
         std::string op = consume().value;
-        auto var = std::make_unique<VariableNode>(name);
+        auto var = std::make_unique<VariableNode>(name, namePos);
         return std::make_unique<UnaryOpNode>(op + "_post", std::move(var));
     }
 
-    // i = expr
     if (check(TokenType::Assign)) {
         consume();
         auto expr = parseLogicalOr();
-        return std::make_unique<AssignmentNode>(name, "=", std::move(expr));
+        return std::make_unique<AssignmentNode>(name, "=", std::move(expr), namePos);
     }
 
     parserError(ErrCode::P011_ExpectedForStep, peek());
@@ -534,16 +510,18 @@ std::unique_ptr<ASTNode> Parser::parseForBody() {
 
 // break;
 std::unique_ptr<ASTNode> Parser::parseBreak() {
-    consume();          // "break"
-    Close_block();      // ';'
-    return std::make_unique<BreakNode>();
+    SourcePos pos(peek());
+    consume();
+    Close_block();
+    return std::make_unique<BreakNode>(pos);
 }
 
 // continue;
 std::unique_ptr<ASTNode> Parser::parseContinue() {
-    consume();          // "continue"
-    Close_block();      // ';'
-    return std::make_unique<ContinueNode>();
+    SourcePos pos(peek());
+    consume();
+    Close_block();
+    return std::make_unique<ContinueNode>(pos);
 }
 
 // if (cond) { ... } [else ...]
@@ -734,11 +712,12 @@ std::unique_ptr<ExpressionNode> Parser::parseInputExpression() {
 
 // Присваивание:  Identificator (=|+=|-=|*=|/=) parseLogicalOr ;
 std::unique_ptr<ASTNode> Parser::parseAssignment() {
-    Token varName = consume();           // идентификатор
-    std::string op = consume().value;    // "=", "+=", ...
+    SourcePos namePos(peek());
+    Token varName = consume();
+    std::string op = consume().value;
     auto expr = parseLogicalOr();
     Close_block();
-    return std::make_unique<AssignmentNode>(varName.value, op, std::move(expr));
+    return std::make_unique<AssignmentNode>(varName.value, op, std::move(expr), namePos);
 }
 
 // ============================================================
@@ -822,6 +801,44 @@ std::unique_ptr<ExpressionNode> Parser::parseUnary() {
     return parsePrimary();
 }
 
+// Вызов функции: name(arg1, arg2, ...)
+std::unique_ptr<ExpressionNode> Parser::parseCall() {
+    Token calleeTok = peek();            // Identifier
+    consume(); // имя функции
+    consume(); // '('
+
+    auto node = std::make_unique<CallNode>(calleeTok.value, SourcePos(calleeTok));
+
+    if (peek().type != TokenType::RParen) {
+        auto arg = parseLogicalOr();
+        if (!arg) {
+            parserError(ErrCode::P007_ExpectedExpression, peek(),
+                        "в вызове функции '" + calleeTok.value + "'");
+            return nullptr;
+        }
+        node->args.push_back(std::move(arg));
+
+        while (peek().type == TokenType::Comma) {
+            consume();
+            auto nextArg = parseLogicalOr();
+            if (!nextArg) {
+                parserError(ErrCode::P007_ExpectedExpression, peek(),
+                            "в вызове функции после ','");
+                return nullptr;
+            }
+            node->args.push_back(std::move(nextArg));
+        }
+    }
+
+    if (peek().type != TokenType::RParen) {
+        parserError(ErrCode::P003_ExpectedClosingParen, peek(),
+                    "после аргументов вызова '" + calleeTok.value + "'");
+        return nullptr;
+    }
+    consume(); // ')'
+    return node;
+}
+
 std::unique_ptr<ExpressionNode> Parser::parsePrimary() {
     Token tok = peek();
 
@@ -840,24 +857,28 @@ std::unique_ptr<ExpressionNode> Parser::parsePrimary() {
     } else if (tok.type == TokenType::KwInput) {
         return parseInputExpression();
     } else if (tok.type == TokenType::Identifier) {
+        if (peekNext().type == TokenType::LParen) {
+            return parseCall();
+        }
+
         consume();
-        auto var = std::make_unique<VariableNode>(tok.value);
+        auto var = std::make_unique<VariableNode>(tok.value, SourcePos(tok));
         if (peek().type == TokenType::Increment || peek().type == TokenType::Decrement) {
             std::string op = consume().value;
             return std::make_unique<UnaryOpNode>(op + "_post", std::move(var));
         }
         return var;
     } else if (tok.type == TokenType::LParen) {
-        consume(); // '('
+        consume();
         auto expr = parseLogicalOr();
         if (peek().type != TokenType::RParen) {
             parserError(ErrCode::P003_ExpectedClosingParen, peek());
             return nullptr;
         }
-        consume(); // ')'
+        consume();
         return expr;
     }
 
     parserError(ErrCode::P009_UnexpectedToken, tok);
-    return nullptr; // unreachable
+    return nullptr;
 }

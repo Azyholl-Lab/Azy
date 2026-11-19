@@ -15,9 +15,12 @@ add_executable(AZY_compiler
     src/Lexer.h
     src/Parser.h
     src/Errors.h
+    src/Semantic.h
 
     src/Lexer.cpp
     src/Parser.cpp
     src/Errors.cpp
+    src/Semantic.cpp
+    
     
 )
