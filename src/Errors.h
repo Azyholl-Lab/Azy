@@ -3,43 +3,45 @@
 #include <unordered_map>
 #include "Token.h"
 
-// Категория ошибки — для группировки, цвета в IDE, фильтрации тестов
 enum class ErrCategory {
     Lexer,
     Parser,
     Semantic,
     Runtime,
+    Warning,
 };
 
-// Код ошибки. Префиксы:
-//   L — лексер, P — парсер, S — семантика, R — runtime
 enum class ErrCode {
-    // ===== Лексер =====
-    L001_UnknownChar,            // неизвестный символ
-    L002_UnterminatedString,     // незакрытая строка
-    L003_UnterminatedComment,    // незакрытый /* ... */
+    // --- Lexer errors ---
+    L001_UnknownChar,
+    L002_UnterminatedString,
+    L003_UnterminatedComment,
+    L004_UnterminatedMultiLineString,
 
-    // ===== Парсер — общие ожидания =====
-    P001_ExpectedSemicolon,      // ожидался ';'
-    P002_ExpectedOpeningParen,   // ожидался '('
-    P003_ExpectedClosingParen,   // ожидался ')'
-    P004_ExpectedOpeningBrace,   // ожидался '{'
-    P005_ExpectedClosingBrace,   // ожидался '}'
-    P006_ExpectedIdentifier,     // ожидался идентификатор
-    P007_ExpectedExpression,     // ожидалось выражение
-    P008_ExpectedModifier,       // ожидался модификатор после '.'
-    P009_UnexpectedToken,        // неожиданный токен
-    P010_ExpectedAssign,         // ожидался '='
-    P011_ExpectedForStep,        // ожидался '++' / '--' / '='
+    // --- Lexer warnings ---
+    W001_MultiLineString,
 
-    // ===== Парсер — конкретные =====
-    P100_UnknownForForm,         // неизвестная форма for
-    P101_InputEmpty,             // input() без переменных
-    P102_InputWithArgsAsExpr,    // input(x) как выражение
-    P103_EmptyVarDecl,           // var без имени
-    P104_MissingWhileAfterDo,    // do ... без while
+    // --- Parser general ---
+    P001_ExpectedSemicolon,
+    P002_ExpectedOpeningParen,
+    P003_ExpectedClosingParen,
+    P004_ExpectedOpeningBrace,
+    P005_ExpectedClosingBrace,
+    P006_ExpectedIdentifier,
+    P007_ExpectedExpression,
+    P008_ExpectedModifier,
+    P009_UnexpectedToken,
+    P010_ExpectedAssign,
+    P011_ExpectedForStep,
 
-    // ===== Семантика  =====
+    // --- Parser specific ---
+    P100_UnknownForForm,
+    P101_InputEmpty,
+    P102_InputWithArgsAsExpr,
+    P103_EmptyVarDecl,
+    P104_MissingWhileAfterDo,
+
+    // --- Semantic ---
     S001_UndeclaredVariable,
     S002_DuplicateDeclaration,
     S003_ReturnOutsideFunction,
@@ -48,28 +50,29 @@ enum class ErrCode {
     S006_TypeMismatch,
     S007_NotCallable,
 
-    // ===== Runtime  =====
+    // --- Runtime ---
     R001_DivisionByZero,
     R002_InputReadFailed,
 };
 
-// Запись в таблице ошибок
 struct ErrorInfo {
-    const char* code;       // "P002"
-    ErrCategory category;   // Parser
-    const char* message;    // "Ожидалась открывающая скобка '('"
-    const char* hint;       // "..." или "" — расширенная подсказка
+    const char* code;
+    ErrCategory category;
+    const char* message;
+    const char* hint;
 };
 
-// Получить запись по коду (бросает std::logic_error, если код не в таблице)
 const ErrorInfo& getErrorInfo(ErrCode code);
 
-// Собрать финальное сообщение:
 std::string formatError(ErrCode code, const Token& tok,
                         const std::string& detail = "");
+
 std::string formatError(ErrCode code, int line, int column,
                         const std::string& tokenValue,
                         const std::string& detail = "");
 
-// "Ошибка парсера" / "Ошибка лексера" / ...
+std::string formatWarning(ErrCode code, int line, int column,
+                          const std::string& tokenValue = "",
+                          const std::string& detail = "");
+
 std::string formatCategory(ErrCategory cat);
