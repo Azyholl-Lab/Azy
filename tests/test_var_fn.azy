@@ -20,13 +20,3 @@ fn check(n) {
         return "not positive";
     }
 }
-
-
-var name = "Alice;
-
-if (a & b) { print.ln("x"); }
-
-print.ln("OK");
-
-/* это комментарий
-который не закрыт
