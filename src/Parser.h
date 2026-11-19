@@ -414,6 +414,7 @@ public:
 
     std::unique_ptr<ASTNode> parseAssignment();
     std::unique_ptr<ASTNode> parsePostfixStatement();
+    std::unique_ptr<ASTNode> parseExpressionStatement();
 
     std::unique_ptr<ASTNode> parsePrint();
     std::unique_ptr<ASTNode> parseInput();

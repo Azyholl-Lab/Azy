@@ -72,6 +72,8 @@ static const std::unordered_map<ErrCode, ErrorInfo> TABLE = {
     // --- Runtime ---
     {ErrCode::R001_DivisionByZero,       {"R001", ErrCategory::Runtime, "Деление на ноль", ""}},
     {ErrCode::R002_InputReadFailed,      {"R002", ErrCategory::Runtime, "Не удалось прочитать значение из input", ""}},
+    {ErrCode::R003_RuntimeTypeError,     {"R003", ErrCategory::Runtime, "Несовместимые типы во время выполнения", ""}},
+    {ErrCode::R004_UndefinedFunction,    {"R004", ErrCategory::Runtime, "Функция не найдена", "Объявите её через fn/def до вызова"}},
 };
 
 const ErrorInfo& getErrorInfo(ErrCode code) {

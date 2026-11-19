@@ -1,0 +1,9 @@
+print("Enter name: ");
+input.line(name);
+print("Hello, ");
+print.ln(name);
+
+print("Enter two numbers: ");
+input(a, b);
+print("Sum = ");
+print.ln(int(a) + int(b));

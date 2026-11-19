@@ -22,7 +22,11 @@ TokenType getKeywordType(const std::string& str) {
         {"true",     TokenType::Bool},
         {"false",    TokenType::Bool},
         {"print",    TokenType::KwPrint},
-        {"input",    TokenType::KwInput}
+        {"input",    TokenType::KwInput},
+        {"int",      TokenType::KwInt},
+        {"float",    TokenType::KwFloat},
+        {"char",     TokenType::KwChar},
+        {"string",   TokenType::KwString}
     };
 
     auto it = keywords.find(str);

@@ -53,6 +53,8 @@ enum class ErrCode {
     // --- Runtime ---
     R001_DivisionByZero,
     R002_InputReadFailed,
+    R003_RuntimeTypeError,
+    R004_UndefinedFunction,
 };
 
 struct ErrorInfo {

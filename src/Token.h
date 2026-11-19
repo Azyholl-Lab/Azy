@@ -31,6 +31,11 @@ enum class TokenType {
     KwPrint,    // Оператор вывода текста
     KwInput,    // Оператор ввода текста
 
+    KwInt,      // int  — зарезервировано как тип
+    KwFloat,    // float — зарезервировано как тип
+    KwChar,     // char — зарезервировано как тип
+    KwString,   // string — зарезервировано как тип
+
     // Арифметические операторы
     Plus,       // +
     Minus,      // -
@@ -107,6 +112,10 @@ inline std::ostream& operator<<(std::ostream& os, TokenType type) {
         case TokenType::KwNot:      os << "KwNot"; break;
         case TokenType::KwPrint:    os << "KwPrint"; break;
         case TokenType::KwInput:    os << "KwInput"; break;
+        case TokenType::KwInt:      os << "KwInt"; break;
+        case TokenType::KwFloat:    os << "KwFloat"; break;
+        case TokenType::KwChar:     os << "KwChar"; break;
+        case TokenType::KwString:   os << "KwString"; break;
 
         case TokenType::Plus:       os << "Plus"; break;
         case TokenType::Minus:      os << "Minus"; break;

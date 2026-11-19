@@ -8,6 +8,23 @@
 // Реализация Parser
 // ============================================================
 
+static bool canStartExpression(TokenType t) {
+    switch (t) {
+        case TokenType::Identifier:
+        case TokenType::Int:
+        case TokenType::Float:
+        case TokenType::String:
+        case TokenType::Bool:
+        case TokenType::LParen:
+        case TokenType::Minus:
+        case TokenType::NotOp:
+        case TokenType::KwNot:
+        case TokenType::KwInt:
+        case TokenType::KwFloat:    return true;
+        default:                    return false;
+    }
+}
+
 Parser::Parser(const std::vector<Token>& toks) : tokens(toks), currentPos(0) {}
 
 Token Parser::peek() {
@@ -78,58 +95,49 @@ std::unique_ptr<ASTNode> Parser::parse() {
 // Разбор операторов (возвращают узел AST)
 // ============================================================
 std::unique_ptr<ASTNode> Parser::parseStatement() {
-    // --- Объявления ---
-    if (check(TokenType::KwVar)) {
-        return parseVarDecl();
-    } else if (check(TokenType::KwFn)) {
-        return parseFunction();
-    } else if (check(TokenType::KwReturn)) {
-        return parseReturn();
+    // 1. Объявления и ключевые конструкции
+    if (check(TokenType::KwVar))       return parseVarDecl();
+    if (check(TokenType::KwFn))        return parseFunction();
+    if (check(TokenType::KwReturn))    return parseReturn();
+    if (check(TokenType::KwIf))        return parseIf();
+    if (check(TokenType::KwDo))        return parseDoWhile();
+    if (check(TokenType::KwWhile))     return parseWhile();
+    if (check(TokenType::KwFor))       return parseFor();
+    if (check(TokenType::KwBreak))     return parseBreak();
+    if (check(TokenType::KwContinue))  return parseContinue();
+    if (check(TokenType::KwPrint))     return parsePrint();
+    if (check(TokenType::KwInput))     return parseInput();
 
-    // --- Управляющие конструкции ---
-    } else if (check(TokenType::KwIf)) {
-        return parseIf();
-    } else if (check(TokenType::KwDo)) {
-        return parseDoWhile();
-    } else if (check(TokenType::KwWhile)) {
-        return parseWhile();
-    } else if (check(TokenType::KwFor)) {
-        return parseFor();
-    } else if (check(TokenType::KwBreak)) {
-        return parseBreak();
-    } else if (check(TokenType::KwContinue)) {
-        return parseContinue();
-
-    // --- Встроенные функции-операторы ---
-    } else if (check(TokenType::KwPrint)) {
-        return parsePrint();
-    } else if (check(TokenType::KwInput)) {
-        return parseInput();
-
-    // --- Присваивание: id (=|+=|-=|*=|/=) expr ; ---
-    } else if (peek().type == TokenType::Identifier &&
-            (checkNext(TokenType::Assign)      ||
-             checkNext(TokenType::PlusAssign)  ||
-             checkNext(TokenType::MinusAssign) ||
-             checkNext(TokenType::MultAssign)  ||
-             checkNext(TokenType::DivAssign))) {
+    // 2. Присваивание: id (=|+=|-=|*=|/=) expr ;
+    if (peek().type == TokenType::Identifier &&
+        (checkNext(TokenType::Assign)      ||
+         checkNext(TokenType::PlusAssign)  ||
+         checkNext(TokenType::MinusAssign) ||
+         checkNext(TokenType::MultAssign)  ||
+         checkNext(TokenType::DivAssign))) {
         return parseAssignment();
-
-    // --- Постфикс: id++ ; / id-- ; ---
-    } else if (peek().type == TokenType::Identifier &&
-            (checkNext(TokenType::Increment) ||
-             checkNext(TokenType::Decrement))) {
-        return parsePostfixStatement();
-
-    // --- Пустой оператор ';' ---
-    } else if (check(TokenType::Semicolon)) {
-        consume();
-        return nullptr;   // no-op
     }
 
-    // --- Всё остальное — ошибка ---
+    // 3. Постфикс: id++ ; / id-- ;
+    if (peek().type == TokenType::Identifier &&
+        (checkNext(TokenType::Increment) ||
+         checkNext(TokenType::Decrement))) {
+        return parsePostfixStatement();
+    }
+
+    // 4. Пустой оператор ';'
+    if (check(TokenType::Semicolon)) {
+        consume();
+        return nullptr;
+    }
+
+    // 5. Общее выражение как оператор: greet("World");
+    if (canStartExpression(peek().type)) {
+        return parseExpressionStatement();
+    }
+
     parserError(ErrCode::P009_UnexpectedToken, peek());
-    return nullptr; // unreachable
+    return nullptr;
 }
 
 std::unique_ptr<ASTNode> Parser::parseBlock() {
@@ -442,6 +450,17 @@ std::unique_ptr<ASTNode> Parser::parseFor() {
 
     parserError(ErrCode::P100_UnknownForForm, peek());
     return nullptr;
+}
+
+// Выражение как отдельный оператор:  greet(x);  1 + 2;  x;
+std::unique_ptr<ASTNode> Parser::parseExpressionStatement() {
+    auto expr = parseLogicalOr();
+    if (!expr) {
+        parserError(ErrCode::P007_ExpectedExpression, peek());
+        return nullptr;
+    }
+    Close_block(); // ';'
+    return std::make_unique<ExpressionStatementNode>(std::move(expr));
 }
 
 // Отдельный оператор: i++;  или  i--;
@@ -856,6 +875,12 @@ std::unique_ptr<ExpressionNode> Parser::parsePrimary() {
         return std::make_unique<LiteralNode>(LiteralNode::Bool, tok.value);
     } else if (tok.type == TokenType::KwInput) {
         return parseInputExpression();
+    } else if (tok.type == TokenType::KwInt || tok.type == TokenType::KwFloat) {
+        if (peekNext().type == TokenType::LParen) {
+            return parseCall();
+        }
+        parserError(ErrCode::P009_UnexpectedToken, tok, "(int/float как выражение допустимы только в вызове int(x)/float(x))");
+        return nullptr;
     } else if (tok.type == TokenType::Identifier) {
         if (peekNext().type == TokenType::LParen) {
             return parseCall();
