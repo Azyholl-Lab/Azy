@@ -11,13 +11,13 @@ add_executable(AZY_compiler
     src/main.cpp
 
     src/Token.h
+    
+    src/Lexer.h
+    src/Parser.h
+    src/Errors.h
 
     src/Lexer.cpp
-    src/Lexer.h
     src/Parser.cpp
-
-    # src/parser.cpp
-    # src/parser.h
-
+    src/Errors.cpp
     
 )

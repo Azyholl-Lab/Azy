@@ -7,6 +7,7 @@
 #include <memory>
 #include <iostream>
 #include "Token.h"
+#include "Errors.h"
 
 // ============================================================
 // Базовые узлы абстрактного синтаксического дерева (AST)
@@ -33,7 +34,7 @@ struct AssignmentNode : ASTNode {
     std::string op;
     std::unique_ptr<ExpressionNode> expr;
 
-    AssignmentNode( std::string name, 
+    AssignmentNode( std::string name,
                     std::string operation,
                     std::unique_ptr<ExpressionNode> e)
         : varName(std::move(name)), op(std::move(operation)), expr(std::move(e)) {}
@@ -92,6 +93,57 @@ struct PrintNode : ASTNode {
         : expr(std::move(e)), newline(nl) {}
 };
 
+// Узел ввода как ОПЕРАТОРА: input(x, y, z); / input.line(x, y);
+struct InputNode : ASTNode {
+    std::vector<std::string> targetVars;   // имена переменных по порядку
+    bool readLine;                         // true, если был модификатор .line
+    InputNode(std::vector<std::string> vars, bool rl)
+        : targetVars(std::move(vars)), readLine(rl) {}
+};
+
+// Узел ввода как ВЫРАЖЕНИЯ: x = input(); / x = input.line();
+struct InputExprNode : ExpressionNode {
+    bool readLine;
+    InputExprNode(bool rl) : readLine(rl) {}
+};
+
+// ============================================================
+// Объявления переменных и функций, return
+// ============================================================
+
+// var x;  |  var x = 5;  |  var x = 5, y = 10;
+struct VarDeclNode : ASTNode {
+    struct Decl {
+        std::string name;
+        std::unique_ptr<ExpressionNode> init;   // может быть nullptr
+        Decl(std::string n, std::unique_ptr<ExpressionNode> i)
+            : name(std::move(n)), init(std::move(i)) {}
+        Decl(Decl&&) = default;
+        Decl& operator=(Decl&&) = default;
+        Decl(const Decl&) = delete;
+        Decl& operator=(const Decl&) = delete;
+    };
+    std::vector<Decl> decls;
+    VarDeclNode() = default;
+};
+
+// fn name(a, b) { ... }  |  def name() { ... }
+struct FunctionNode : ASTNode {
+    std::string name;
+    std::vector<std::string> params;
+    std::unique_ptr<ASTNode> body;   // BlockNode
+    FunctionNode(std::string n,
+                 std::vector<std::string> p,
+                 std::unique_ptr<ASTNode> b)
+        : name(std::move(n)), params(std::move(p)), body(std::move(b)) {}
+};
+
+// return;  |  return expr;
+struct ReturnNode : ASTNode {
+    std::unique_ptr<ExpressionNode> expr;   // может быть nullptr
+    ReturnNode(std::unique_ptr<ExpressionNode> e) : expr(std::move(e)) {}
+};
+
 // Узлы для выражений
 struct LiteralNode : ExpressionNode {
     enum Type { Int, Float, String, Bool };
@@ -139,17 +191,21 @@ private:
     bool checkNext(TokenType type);
     bool checkNext(TokenType type, const std::string& value);
 
-    void debugging( bool debug = false) {
-        if (debug){
-        Token token = peek();
-        std::cout << "[Парсер] " << token.value << "\n";
-    }}
+    void debugging(bool debug = false) {
+        if (debug) {
+            Token token = peek();
+            std::cout << "[Парсер] " << token.value << "\n";
+        }
+    }
 
     void Close_block();
 
 public:
     Parser(const std::vector<Token>& toks);
 
+    // --------------------------------------------------------
+    // Печать AST
+    // --------------------------------------------------------
     void printAST(const ASTNode* node, int indent = 0) {
         std::string pad(indent * 2, ' ');
 
@@ -199,15 +255,13 @@ public:
             } else {
                 std::cout << pad << "For (" << forNode->varName << ":\n";
 
-                // init
                 std::cout << pad << "  init: ";
                 if (forNode->init) {
-                    printAST(forNode->init.get(), 0); 
-                } else { 
-                    std::cout << forNode->varName << " = 0\n"; 
+                    printAST(forNode->init.get(), 0);
+                } else {
+                    std::cout << forNode->varName << " = 0\n";
                 }
 
-                // cond
                 std::cout << pad << "  cond: ";
                 if (forNode->condition) {
                     printAST(forNode->condition.get(), 0);
@@ -216,7 +270,6 @@ public:
                 }
                 std::cout << "\n";
 
-                // step
                 std::cout << pad << "  step: ";
                 if (forNode->step) {
                     printAST(forNode->step.get(), 0);
@@ -241,6 +294,51 @@ public:
             std::cout << pad << "Print" << (printNode->newline ? ".ln" : "") << " (";
             printAST(printNode->expr.get(), 0);
             std::cout << ")\n";
+        }
+        else if (auto inputNode = dynamic_cast<const InputNode*>(node)) {
+            std::cout << pad << "Input" << (inputNode->readLine ? ".line" : "") << "(";
+            for (size_t i = 0; i < inputNode->targetVars.size(); ++i) {
+                if (i > 0) std::cout << ", ";
+                std::cout << "-> " << inputNode->targetVars[i];
+            }
+            std::cout << ")\n";
+        }
+        else if (auto inputExpr = dynamic_cast<const InputExprNode*>(node)) {
+            std::cout << pad << "Input" << (inputExpr->readLine ? ".line" : "") << "()";
+        }
+        else if (auto varDecl = dynamic_cast<const VarDeclNode*>(node)) {
+            std::cout << pad << "VarDecl {\n";
+            for (const auto& d : varDecl->decls) {
+                std::cout << pad << "  " << d.name;
+                if (d.init) {
+                    std::cout << " = ";
+                    printAST(d.init.get(), 0);
+                } else {
+                    std::cout << " (uninitialized)";
+                }
+                std::cout << "\n";
+            }
+            std::cout << pad << "}\n";
+        }
+        else if (auto fn = dynamic_cast<const FunctionNode*>(node)) {
+            std::cout << pad << "Function " << fn->name << "(";
+            for (size_t i = 0; i < fn->params.size(); ++i) {
+                if (i > 0) std::cout << ", ";
+                std::cout << fn->params[i];
+            }
+            std::cout << ") {\n";
+            if (fn->body) {
+                printAST(fn->body.get(), indent + 1);
+            }
+            std::cout << pad << "}\n";
+        }
+        else if (auto ret = dynamic_cast<const ReturnNode*>(node)) {
+            std::cout << pad << "Return";
+            if (ret->expr) {
+                std::cout << " ";
+                printAST(ret->expr.get(), 0);
+            }
+            std::cout << "\n";
         }
         else if (auto literal = dynamic_cast<const LiteralNode*>(node)) {
             std::cout << pad << "Literal(";
@@ -269,7 +367,7 @@ public:
         }
         else if (auto exprStmt = dynamic_cast<const ExpressionStatementNode*>(node)) {
             printAST(exprStmt->expr.get(), indent);
-            std::cout << "\n";   // перенос после statement
+            std::cout << "\n";
         }
         else {
             std::cout << pad << "Unknown node\n";
@@ -279,18 +377,14 @@ public:
     // Главный метод – возвращает корневой узел (блок)
     std::unique_ptr<ASTNode> parse();
 
-    // Шаблон для генерации ошибок (без изменений)
+    // --------------------------------------------------------
+    // Генерация ошибок через таблицу Errors.h
+    // --------------------------------------------------------
     template <typename... Args>
-    void parserError(const Token& token, Args&&... args) {
+    void parserError(ErrCode code, const Token& token, Args&&... args) {
         std::ostringstream msgStream;
         (msgStream << ... << std::forward<Args>(args));
-
-        std::string errorMsg = "[Ошибка парсера] " + msgStream.str() +
-            " (строка: " + std::to_string(token.line) +
-            ", символ: " + std::to_string(token.column) +
-            ", токен: '" + token.value + "')";
-
-        throw std::runtime_error(errorMsg);
+        throw std::runtime_error(formatError(code, token, msgStream.str()));
     }
 
     // Методы разбора операторов (возвращают узлы)
@@ -316,6 +410,12 @@ public:
     std::unique_ptr<ASTNode> parsePostfixStatement();
 
     std::unique_ptr<ASTNode> parsePrint();
+    std::unique_ptr<ASTNode> parseInput();
+    std::unique_ptr<ExpressionNode> parseInputExpression();
+
+    std::unique_ptr<ASTNode> parseVarDecl();
+    std::unique_ptr<ASTNode> parseFunction();
+    std::unique_ptr<ASTNode> parseReturn();
 
     // Методы разбора выражений (возвращают ExpressionNode)
     std::unique_ptr<ExpressionNode> parseLogicalOr();

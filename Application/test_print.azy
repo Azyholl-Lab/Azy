@@ -1,2 +1,12 @@
-print("hello_world! ");
-print.ln("Hello world with close tab!")
+print("Enter name: ");
+input.line(name);
+
+print("Enter age: ");
+age = input();
+
+print("Enter x y z: ");
+input(x, y, z);
+
+print.ln(name);
+print.ln(age);
+print.ln(x);

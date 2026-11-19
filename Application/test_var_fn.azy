@@ -1,0 +1,22 @@
+var x = 42;
+var name = "Azy";
+var a, b;
+var i = 0, j = 10;
+
+fn add(p, q) {
+    var result = p + q;
+    return result;
+}
+
+def greet(person) {
+    print.ln("Hello");
+    print.ln(person);
+}
+
+fn check(n) {
+    if (n > 0) {
+        return "positive";
+    } else {
+        return "not positive";
+    }
+}
