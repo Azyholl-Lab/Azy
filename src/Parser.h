@@ -4,7 +4,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
-#include <memory>          // для std::unique_ptr
+#include <memory>
 #include <iostream>
 #include "Token.h"
 
@@ -33,8 +33,9 @@ struct AssignmentNode : ASTNode {
     std::string op;
     std::unique_ptr<ExpressionNode> expr;
 
-    AssignmentNode(std::string name, std::string operation,
-                   std::unique_ptr<ExpressionNode> e)
+    AssignmentNode( std::string name, 
+                    std::string operation,
+                    std::unique_ptr<ExpressionNode> e)
         : varName(std::move(name)), op(std::move(operation)), expr(std::move(e)) {}
 };
 

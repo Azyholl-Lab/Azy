@@ -16,7 +16,7 @@ enum class TokenType {
     Bool,       // true, false
 
     // Ключевые слова (управляющие конструкции, переменные и т.д.)
-    KwLet,      // let (или аналог объявления)
+    KwVar,      // var
     KwFn,       // def / fn
     KwIf,       // if
     KwElse,     // else
@@ -28,6 +28,8 @@ enum class TokenType {
     KwBreak,    // break
     KwContinue, // continue
     KwNot,      // условный оператор/слово not
+    KwPrint,    // Оператор вывода текста
+    KwInput,    // Оператор ввода текста
 
     // Арифметические операторы
     Plus,       // +
@@ -91,7 +93,7 @@ inline std::ostream& operator<<(std::ostream& os, TokenType type) {
         case TokenType::String:     os << "String"; break;
         case TokenType::Bool:       os << "Bool"; break;
 
-        case TokenType::KwLet:      os << "KwLet"; break;
+        case TokenType::KwVar:      os << "KwVar"; break;
         case TokenType::KwFn:       os << "KwFn"; break;
         case TokenType::KwIf:       os << "KwIf"; break;
         case TokenType::KwElse:     os << "KwElse"; break;
@@ -103,6 +105,8 @@ inline std::ostream& operator<<(std::ostream& os, TokenType type) {
         case TokenType::KwBreak:    os << "KwBreak"; break;
         case TokenType::KwContinue: os << "KwContinue"; break;
         case TokenType::KwNot:      os << "KwNot"; break;
+        case TokenType::KwPrint:    os << "KwPrint"; break;
+        case TokenType::KwInput:    os << "KwInput"; break;
 
         case TokenType::Plus:       os << "Plus"; break;
         case TokenType::Minus:      os << "Minus"; break;

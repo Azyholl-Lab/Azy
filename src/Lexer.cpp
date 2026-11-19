@@ -4,7 +4,7 @@
 // Вспомогательная функция: проверка, является ли идентификатор ключевым словом
 TokenType getKeywordType(const std::string& str) {
     static const std::unordered_map<std::string, TokenType> keywords = {
-        {"var",      TokenType::KwLet},
+        {"var",      TokenType::KwVar},
         {"fn",       TokenType::KwFn},
         {"def",      TokenType::KwFn},
         {"if",       TokenType::KwIf},
@@ -18,7 +18,9 @@ TokenType getKeywordType(const std::string& str) {
         {"continue", TokenType::KwContinue},
         {"not",      TokenType::KwNot},
         {"true",     TokenType::Bool},
-        {"false",    TokenType::Bool}
+        {"false",    TokenType::Bool},
+        {"print",    TokenType::KwPrint},
+        {"input",    TokenType::KwInput}
     };
 
     auto it = keywords.find(str);
